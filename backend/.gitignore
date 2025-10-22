@@ -1,0 +1,12 @@
+# Node
+node_modules/
+.env
+swagger_output.json
+
+# Build output
+dist/
+build/
+
+# System
+.DS_Store
+Thumbs.db
