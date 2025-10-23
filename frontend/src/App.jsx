@@ -5,7 +5,7 @@ import MainLayout from "./components/layout/MainLayout";
 
 import Login from "./pages/Login";
 import Home from "./pages/Home";
-// import Users from "./pages/Users";
+import Users from "./pages/Users";
 // import Catalogs from "./pages/Catalogs";
 // import Products from "./pages/Products";
 // import Ingredients from "./pages/Ingredients";
@@ -32,8 +32,8 @@ function App() {
                         }
                     >
                         <Route path="home" element={<Home />} />
-                        {/* <Route path="users" element={<Users />} />
-                        <Route path="catalogs" element={<Catalogs />} />
+                        <Route path="users" element={<Users />} />
+                        {/*<Route path="catalogs" element={<Catalogs />} />
                         <Route path="products" element={<Products />} />
                         <Route path="ingredients" element={<Ingredients />} />
                         <Route path="customer-orders" element={<CustomerOrders />} />

@@ -26,26 +26,18 @@ export async function signup(request, response, next) {
       role: "CUSTOMER",
     });
 
-    const customer = await Customer.create({
-      user: user._id,
-      phone,
-      address,
-    });
-
+    const customer = await Customer.create({ user: user._id, phone, address });
     user.customer = customer._id;
     await user.save();
 
     await mailer.sendMail({
       to: email,
       subject: "Welcome to MyBakeApp 🎂",
-      html: `<p>Hi ${name}, your account has been successfully created!</p>`,
-      from: process.env.EMAIL_USER,
+      html: `<p>Hi ${name}, your account has been successfully created!</p>`
     });
 
-    const token = signJWT({ id: user._id, role: user.role });
-    return response
-      .status(201)
-      .json({ message: "User successfully registered", token, user });
+    const token = signJWT({ id: user._id, role: user.role, name: user.name });
+    return response.status(201).json({ message: "User successfully registered", token, user });
   } catch (error) {
     next(error);
   }
@@ -57,20 +49,14 @@ export async function signup(request, response, next) {
 export async function login(request, response, next) {
   try {
     const { email, password } = request.body;
-
     const user = await User.findOne({ email });
     if (!user) return next(createError(404, "User not found"));
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) return next(createError(400, "Incorrect email or password"));
 
-    const token = signJWT({ id: user._id, role: user.role });
-
-    return response.status(200).json({
-      message: "Login successful",
-      token,
-      user,
-    });
+    const token = signJWT({ id: user._id, role: user.role, name: user.name });
+    return response.status(200).json({ message: "Login successful", token, user });
   } catch (error) {
     next(error);
   }
@@ -93,14 +79,7 @@ export async function googleLogin(request, response, next) {
         await existingEmailUser.save();
         user = existingEmailUser;
       } else {
-        user = await User.create({
-          name,
-          surname,
-          email,
-          googleId,
-          role: "CUSTOMER",
-        });
-
+        user = await User.create({ name, surname, email, googleId, role: "CUSTOMER" });
         const customer = await Customer.create({ user: user._id });
         user.customer = customer._id;
         await user.save();
@@ -108,16 +87,15 @@ export async function googleLogin(request, response, next) {
         await mailer.sendMail({
           to: email,
           subject: "Welcome to MyBakeApp 🎂",
-          html: `<p>Hi ${name || "User"}, welcome to MyBakeApp via Google login!</p>`,
-          from: process.env.EMAIL_USER,
+          html: `<p>Hi ${name || "User"}, welcome to MyBakeApp via Google login!</p>`
         });
       }
     }
 
-    const token = signJWT({ id: user._id, role: user.role });
-    return response
-      .status(200)
-      .json({ message: "Google login successful", token, user });
+    // Include il nome nel payload del token
+    const token = signJWT({ id: user._id, role: user.role, name: user.name });
+
+    return response.status(200).json({ message: "Google login successful", token, user });
   } catch (error) {
     next(error);
   }

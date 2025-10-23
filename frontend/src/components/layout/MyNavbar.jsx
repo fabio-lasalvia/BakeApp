@@ -7,7 +7,8 @@ import {
   FolderFill,
   BagFill,
   Receipt,
-  GearFill
+  GearFill,
+  ClipboardDataFill
 } from "react-bootstrap-icons";
 
 
@@ -20,16 +21,16 @@ export default function MyNavbar({ show = false, onHide = () => {} }) {
     { to: "/products", label: "Products", Icon: BoxFill },
     { to: "/catalogs", label: "Catalogs", Icon: FolderFill },
     { to: "/customer-orders", label: "Customer Orders", Icon: BagFill },
-    { to: "/purchase-orders", label: "Purchase Orders", Icon: Receipt },
+    { to: "/purchase-orders", label: "Purchase Orders", Icon: ClipboardDataFill },
     { to: "/invoices", label: "Invoices", Icon: Receipt },
   ];
 
   const SidebarBody = (
     <div className="d-flex flex-column h-100 p-3 sidebar-dark">
       {/* Brand */}
-      <div className="d-flex align-items-center mb-4 px-2">
+      <div className="d-flex justify-content-center align-items-center mb-4 px-2">
         <Image src="/img/logo/logoBakeApp.png" className="rounded me-2" style={{maxHeight: "50px"}}/>
-        <span className="fw-semibold text-light">BakeApp</span>
+        {/* <span className="fw-semibold text-light">BakeApp</span> */}
       </div>
 
       {/* Menu */}

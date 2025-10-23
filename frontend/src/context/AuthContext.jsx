@@ -6,13 +6,15 @@ export const AuthProvider = ({ children }) => {
     const [isLogged, setIsLogged] = useState(false);
     const [loading, setLoading] = useState(true);
 
-    const login = (token) => {
+    const login = (token, name = null) => {
         localStorage.setItem("token", token);
+        if (name) localStorage.setItem("userName", name);
         setIsLogged(true);
     };
 
     const logout = () => {
         localStorage.removeItem("token");
+        localStorage.removeItem("userName");
         setIsLogged(false);
     };
 
