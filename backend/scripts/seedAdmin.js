@@ -19,7 +19,7 @@ mongoose.connect(process.env.MONGODB_CONNECTION_URI)
 
     const admin = new User({
       name: "Fabio",
-      surname: "La Salvia",
+      surname: "Lasalvia",
       email,
       password,
       role: "ADMIN",

@@ -18,8 +18,8 @@ export default function MyNavbar({ show = false, onHide = () => {} }) {
   const items = [
     { to: "/home", label: "Dashboard", Icon: HouseDoorFill },
     { to: "/users", label: "Users", Icon: PeopleFill },
-    { to: "/products", label: "Products", Icon: BoxFill },
     { to: "/catalogs", label: "Catalogs", Icon: FolderFill },
+    { to: "/products", label: "Products", Icon: BoxFill },    
     { to: "/customer-orders", label: "Customer Orders", Icon: BagFill },
     { to: "/purchase-orders", label: "Purchase Orders", Icon: ClipboardDataFill },
     { to: "/invoices", label: "Invoices", Icon: Receipt },

@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon --ignore swagger_output.json server.js",
-    "seed": "node ./scripts/seed.js"
+    "seed": "node ./scripts/seed.js",
+    "seed-admin": "node ./scripts/seed-admin.js"
   },
   "keywords": [],
   "author": "",

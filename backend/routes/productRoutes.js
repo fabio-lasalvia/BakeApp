@@ -1,22 +1,24 @@
 import express from "express";
 import {
-    index,
-    show,
-    create,
-    update,
-    remove,
+  index,
+  show,
+  create,
+  update,
+  remove,
 } from "../controllers/productController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 import { authorizeRoles } from "../middlewares/roleMiddleware.js";
+import { uploadCloudinary } from "../middlewares/common/uploadCloudinary.js";
 
 const router = express.Router();
 
-router.use(protect, authorizeRoles("ADMIN", "EMPLOYEE"));
+// Solo users autenticati
+router.get("/", protect, index);
+router.get("/:id", protect, show);
 
-router.get("/", index);
-router.get("/:id", show);
-router.post("/", create);
-router.put("/:id", update);
-router.delete("/:id", remove);
+// Creazione, modifica ed eliminazione solo per admin e employee
+router.post("/", protect, authorizeRoles("ADMIN", "EMPLOYEE"), uploadCloudinary.single("image"), create);
+router.put("/:id", protect, authorizeRoles("ADMIN", "EMPLOYEE"), uploadCloudinary.single("image"), update);
+router.delete("/:id", protect, authorizeRoles("ADMIN", "EMPLOYEE"), remove);
 
 export default router;

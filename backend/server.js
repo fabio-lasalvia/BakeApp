@@ -25,7 +25,7 @@ import { configurePassport } from "./config/passport.config.js";
 //////////////////////////////
 ///// IMPORT MIDDLEWARES /////
 //////////////////////////////
-import {errorHandler} from "./middlewares/errorHandler.js";
+import {errorHandler} from "./middlewares/common/errorHandler.js";
 
 /////////////////////////
 ///// IMPORT ROUTES /////
