@@ -3,7 +3,8 @@ import mongoose from "mongoose";
 const CustomerOrderSchema = new mongoose.Schema(
   {
     customer: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", required: true },
-    employee: { type: mongoose.Schema.Types.ObjectId, ref: "Employee", required: true },
+    handledBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     products: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
     totalAmount: { type: Number, required: true },
     status: {

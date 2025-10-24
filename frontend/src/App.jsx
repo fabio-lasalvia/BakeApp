@@ -8,10 +8,11 @@ import Home from "./pages/Home";
 import Users from "./pages/Users";
 import Catalogs from "./pages/Catalogs";
 import Products from "./pages/Products";
-// import Ingredients from "./pages/Ingredients";
-// import CustomerOrders from "./pages/CustomerOrders";
-// import PurchaseOrders from "./pages/PurchaseOrders";
-// import Invoices from "./pages/Invoices";
+import Ingredients from "./pages/Ingredients";
+import CustomerOrders from "./pages/CustomerOrders";
+import PurchaseOrders from "./pages/PurchaseOrders";
+import Invoices from "./pages/Invoices";
+import InvoicePrint from "./pages/InvoicePrint";
 
 function App() {
     return (
@@ -35,10 +36,11 @@ function App() {
                         <Route path="users" element={<Users />} />
                         <Route path="catalogs" element={<Catalogs />} />
                         <Route path="products" element={<Products />} />                         
-                        {/*<Route path="ingredients" element={<Ingredients />} />
+                        <Route path="ingredients" element={<Ingredients />} />
                         <Route path="customer-orders" element={<CustomerOrders />} />
-                        <Route path="purchase-orders" element={<PurchaseOrders />} />
-                        <Route path="invoices" element={<Invoices />} /> */}
+                         <Route path="purchase-orders" element={<PurchaseOrders />} />
+                        <Route path="invoices" element={<Invoices />} />
+                        <Route path="print/invoice/:id" element={<InvoicePrint />} />
                     </Route>
                 </Routes>
             </AuthProvider>

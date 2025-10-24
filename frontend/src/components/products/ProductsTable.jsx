@@ -61,7 +61,7 @@ function ProductsTable() {
   return (
     <div className="mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2 className="fw-bold text-primary">Products</h2>
+        <h2 className="fw-bold text-primary">Products Management</h2>
         <Button variant="success" onClick={addModal.openModal}>
           <i className="bi bi-plus-circle me-2"></i>Add Product
         </Button>
@@ -74,7 +74,7 @@ function ProductsTable() {
             <th>Name</th>
             <th>Category</th>
             <th>Price (€)</th>
-            <th>Stock</th>
+            <th>Catalog</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -85,7 +85,7 @@ function ProductsTable() {
               <td>{product.name}</td>
               <td>{product.category}</td>
               <td>{product.price?.toFixed(2)}</td>
-              <td>{product.stock || 0}</td>
+              <td>{product.catalogs || "-"}</td>
               <td>
                 <div className="d-flex justify-content-center gap-2">
                   <Button

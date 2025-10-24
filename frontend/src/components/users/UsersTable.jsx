@@ -1,4 +1,4 @@
-import { Accordion, Table, Button, Spinner } from "react-bootstrap";
+import { Accordion, Table, Button, Spinner, Badge } from "react-bootstrap";
 import useIndexUsers from "../../hooks/users/useIndexUsers";
 import useDeleteUser from "../../hooks/users/useDeleteUser";
 import { useAuth } from "../../context/AuthContext";
@@ -11,7 +11,7 @@ import UserDetailsModal from "./UserDetailsModal";
 function UsersTable() {
   const { users, loading, error, refetch } = useIndexUsers();
   const { remove } = useDeleteUser();
-  const { isLogged } = useAuth();
+  const { user: loggedUser } = useAuth();
 
   const [selectedUser, setSelectedUser] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -19,6 +19,11 @@ function UsersTable() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
+  const isAdmin = loggedUser?.role === "ADMIN";
+
+  //////////////////////
+  ///// LOADING UI /////
+  //////////////////////
   if (loading)
     return (
       <div className="text-center p-4">
@@ -36,6 +41,9 @@ function UsersTable() {
   if (!users || users.length === 0)
     return <p className="text-center mt-4">No users found.</p>;
 
+  ///////////////////////////////
+  ///// GROUP USERS BY ROLE /////
+  ///////////////////////////////
   const groupedUsers = users.reduce((acc, user) => {
     const role = user.role || "UNKNOWN";
     if (!acc[role]) acc[role] = [];
@@ -43,6 +51,9 @@ function UsersTable() {
     return acc;
   }, {});
 
+  //////////////////////////////
+  ///// HANDLE DELETE USER /////
+  //////////////////////////////
   const handleDelete = async () => {
     if (!selectedUser) return;
     await remove(selectedUser._id);
@@ -50,6 +61,9 @@ function UsersTable() {
     setShowConfirm(false);
   };
 
+  ///////////////////////////////
+  ///// RENDER TABLE BY ROLE ////
+  ///////////////////////////////
   const renderTable = (role) => {
     const roleUsers = groupedUsers[role] || [];
     if (roleUsers.length === 0)
@@ -62,6 +76,7 @@ function UsersTable() {
             <th>#</th>
             <th>Name</th>
             <th>Email</th>
+            <th>Role</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -69,10 +84,18 @@ function UsersTable() {
           {roleUsers.map((user, index) => (
             <tr key={user._id}>
               <td>{index + 1}</td>
-              <td>{user.name} {user.surname || ""}</td>
+              <td>
+                {user.name} {user.surname || ""}
+              </td>
               <td>{user.email}</td>
               <td>
+                <Badge bg={user.role === "ADMIN" ? "danger" : "secondary"}>
+                  {user.role}
+                </Badge>
+              </td>
+              <td>
                 <div className="d-flex justify-content-center gap-2">
+                  {/* DETAILS */}
                   <Button
                     size="sm"
                     variant="outline-primary"
@@ -84,8 +107,8 @@ function UsersTable() {
                     <i className="bi bi-eye"></i>
                   </Button>
 
-                  {/* Solo Admin può modificare/eliminare */}
-                  {user.role === "ADMIN" && (
+                  {/* EDIT + DELETE visible only for ADMIN */}
+                  {isAdmin && (
                     <>
                       <Button
                         size="sm"
@@ -118,16 +141,25 @@ function UsersTable() {
     );
   };
 
+  //////////////////////////
+  ///// RETURN LAYOUT //////
+  //////////////////////////
   return (
     <div className="mt-4">
+      {/* HEADER */}
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2 className="fw-bold text-primary">Users Management</h2>
-        <Button variant="success" onClick={() => setShowAddModal(true)}>
-          <i className="bi bi-plus-circle me-2"></i>Add User
-        </Button>
+        <h2 className="fw-bold text-primary mb-0">Users Management</h2>
+
+        {/* ADD BUTTON (only admin) */}
+        {isAdmin && (
+          <Button variant="success" onClick={() => setShowAddModal(true)}>
+            <i className="bi bi-plus-circle me-2"></i> Add User
+          </Button>
+        )}
       </div>
 
-      <Accordion defaultActiveKey="0" alwaysOpen>
+      {/* ACCORDION MULTI-OPEN */}
+      <Accordion alwaysOpen>
         <Accordion.Item eventKey="0">
           <Accordion.Header>Admins</Accordion.Header>
           <Accordion.Body>{renderTable("ADMIN")}</Accordion.Body>
@@ -149,7 +181,7 @@ function UsersTable() {
         </Accordion.Item>
       </Accordion>
 
-      {/* Modals */}
+      {/* MODALS */}
       <AddUserModal show={showAddModal} onHide={() => setShowAddModal(false)} refetch={refetch} />
       <EditUserModal show={showEditModal} onHide={() => setShowEditModal(false)} user={selectedUser} refetch={refetch} />
       <UserDetailsModal show={showDetailsModal} onHide={() => setShowDetailsModal(false)} user={selectedUser} />
@@ -158,7 +190,7 @@ function UsersTable() {
         closeModal={() => setShowConfirm(false)}
         onConfirm={handleDelete}
         title="Confirm Deletion"
-        message={`Are you sure you want to delete ${selectedUser?.name}? This action cannot be undone.`}
+        message={`Are you sure you want to delete ${selectedUser?.name}?`}
       />
     </div>
   );

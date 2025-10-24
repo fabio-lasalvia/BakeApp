@@ -72,7 +72,7 @@ export default function Home() {
   return (
     <div className="p-4">
       <div className="mb-4">
-        <h2 className="fw-bold text-primary">Welcome, {userName || "User"} 👋</h2>
+        <h2 className="fw-bold text-primary">Welcome, {userName || "User"}</h2>
         <p className="text-muted">Here's an overview of your BakeApp dashboard</p>
       </div>
 

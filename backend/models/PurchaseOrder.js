@@ -3,7 +3,8 @@ import mongoose from "mongoose";
 const PurchaseOrderSchema = new mongoose.Schema(
   {
     supplier: { type: mongoose.Schema.Types.ObjectId, ref: "Supplier", required: true },
-    employee: { type: mongoose.Schema.Types.ObjectId, ref: "Employee", required: true },
+    handledBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     ingredients: [{ type: mongoose.Schema.Types.ObjectId, ref: "Ingredient" }],
     totalCost: { type: Number, required: true },
     status: {

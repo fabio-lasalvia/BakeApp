@@ -1,31 +1,58 @@
-import { Modal, Button } from "react-bootstrap";
+import { Modal, Table, Badge } from "react-bootstrap";
 
 function UserDetailsModal({ show, onHide, user }) {
   if (!user) return null;
 
   return (
-    <Modal show={show} onHide={onHide} centered>
+    <Modal show={show} onHide={onHide} centered size="lg">
       <Modal.Header closeButton>
         <Modal.Title>User Details</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <p><strong>Name:</strong> {user.name} {user.surname || ""}</p>
-        <p><strong>Email:</strong> {user.email}</p>
-        <p><strong>Role:</strong> {user.role}</p>
+        <Table bordered hover>
+          <tbody>
+            <tr>
+              <td><strong>Name</strong></td>
+              <td>{user.name} {user.surname || ""}</td>
+            </tr>
+            <tr>
+              <td><strong>Email</strong></td>
+              <td>{user.email}</td>
+            </tr>
+            <tr>
+              <td><strong>Role</strong></td>
+              <td><Badge bg="info">{user.role}</Badge></td>
+            </tr>
 
-        {user.phone && <p><strong>Phone:</strong> {user.phone}</p>}
-        {user.address && <p><strong>Address:</strong> {user.address}</p>}
-        {user.companyName && <p><strong>Company:</strong> {user.companyName}</p>}
-        {user.contact && <p><strong>Contact:</strong> {user.contact}</p>}
+            {user.role === "CUSTOMER" && (
+              <>
+                <tr><td><strong>Phone</strong></td><td>{user.customer?.phone || "—"}</td></tr>
+                <tr><td><strong>Address</strong></td><td>{user.customer?.address || "—"}</td></tr>
+              </>
+            )}
 
-        <p className="text-muted small mt-3">
-          Created: {new Date(user.createdAt).toLocaleDateString()}<br />
-          Last Updated: {new Date(user.updatedAt).toLocaleDateString()}
-        </p>
+            {user.role === "EMPLOYEE" && (
+              <tr>
+                <td><strong>Department</strong></td>
+                <td>{user.employee?.department || "—"}</td>
+              </tr>
+            )}
+
+            {user.role === "SUPPLIER" && (
+              <>
+                <tr><td><strong>Company</strong></td><td>{user.supplier?.companyName || "—"}</td></tr>
+                <tr><td><strong>Contact</strong></td><td>{user.supplier?.contact || "—"}</td></tr>
+                <tr><td><strong>VAT</strong></td><td>{user.supplier?.vatNumber || "—"}</td></tr>
+              </>
+            )}
+
+            <tr>
+              <td><strong>Created</strong></td>
+              <td>{new Date(user.createdAt).toLocaleString()}</td>
+            </tr>
+          </tbody>
+        </Table>
       </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={onHide}>Close</Button>
-      </Modal.Footer>
     </Modal>
   );
 }

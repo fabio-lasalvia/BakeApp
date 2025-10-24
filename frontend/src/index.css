@@ -10,3 +10,25 @@
 
 .topbar { height: 56px; }
 
+/***** Invoice print *****/
+@media print {
+  .navbar,
+  .sidebar-fixed,
+  .sidebar-offcanvas,
+  .d-print-none {
+    display: none !important;
+  }
+  body {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    background: white;
+  }
+  .invoice-print {
+    margin: 0 auto;
+    padding: 20px;
+    width: 100%;
+  }
+  table {
+    font-size: 13px;
+  }
+}

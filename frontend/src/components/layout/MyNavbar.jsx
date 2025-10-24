@@ -20,6 +20,7 @@ export default function MyNavbar({ show = false, onHide = () => {} }) {
     { to: "/users", label: "Users", Icon: PeopleFill },
     { to: "/catalogs", label: "Catalogs", Icon: FolderFill },
     { to: "/products", label: "Products", Icon: BoxFill },    
+    { to: "/ingredients", label: "Ingredients", Icon: BoxFill },    
     { to: "/customer-orders", label: "Customer Orders", Icon: BagFill },
     { to: "/purchase-orders", label: "Purchase Orders", Icon: ClipboardDataFill },
     { to: "/invoices", label: "Invoices", Icon: Receipt },
@@ -29,7 +30,13 @@ export default function MyNavbar({ show = false, onHide = () => {} }) {
     <div className="d-flex flex-column h-100 p-3 sidebar-dark">
       {/* Brand */}
       <div className="d-flex justify-content-center align-items-center mb-4 px-2">
-        <Image src="/img/logo/logoBakeApp.png" className="rounded me-2" style={{maxHeight: "50px"}}/>
+        <Link to="/home" onClick={onHide}>
+          <Image 
+            src="/img/logo/logoBakeApp.png" 
+            className="rounded me-2" 
+            style={{maxHeight: "50px"}}
+          />
+        </Link>
         {/* <span className="fw-semibold text-light">BakeApp</span> */}
       </div>
 
