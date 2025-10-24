@@ -77,3 +77,21 @@ export async function updateUserRole(id, role) {
     throw error;
   }
 }
+
+//////////////////////////////////
+///// /users/me - MY PROFILE /////
+//////////////////////////////////
+
+//// GET - Profilo dell'utente loggato /////
+export async function getMyProfile() {
+  const response = await axios.get("/users/me");
+  return response.data;
+}
+
+///// PUT - Aggiornamento profilo personale /////
+export async function updateMyProfile(data) {
+  const response = await axios.put("/users/me", data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+}

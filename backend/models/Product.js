@@ -6,8 +6,21 @@ const ProductSchema = new mongoose.Schema(
     description: { type: String },
     price: { type: Number, required: true },
     image: { type: String },
+    category: {
+      type: String,
+      enum: [
+        "LEAVENED",    // lievitati: cornetti, brioche, panettoni
+        "CAKE",        // torte classiche e moderne
+        "COOKIE",      // biscotti, pasticceria secca
+        "CHOCOLATE",   // praline, tavolette, ganache
+        "BREAD",       // pane, focacce, pizze
+        "DESSERT",     // mousse, semifreddi, monoporzioni
+        "OTHER",       // prodotti non classificabili
+      ],
+      required: true,
+      default: "OTHER",
+    },
     catalog: { type: mongoose.Schema.Types.ObjectId, ref: "Catalog" },
-    customerOrder: { type: mongoose.Schema.Types.ObjectId, ref: "CustomerOrder" },
     available: { type: Boolean, default: true },
   },
   { timestamps: true }

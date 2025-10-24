@@ -15,6 +15,12 @@ const UserSchema = new mongoose.Schema(
     },
     password: { type: String, minlength: 6 },
     googleId: { type: String, sparse: true },
+    avatar: {
+  type: String,
+  default:
+    "https://res.cloudinary.com/dbqckc5sl/image/upload/v1759400955/segnapostoNoImage_rumvcb.png",
+},
+
     role: {
       type: String,
       enum: ["ADMIN", "CUSTOMER", "EMPLOYEE", "SUPPLIER"],

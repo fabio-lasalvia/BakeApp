@@ -1,8 +1,18 @@
-import { Modal, Tab, Tabs, Image, Table } from "react-bootstrap";
+import { Modal, Tab, Tabs, Image, Table, Badge } from "react-bootstrap";
 import { QRCodeCanvas } from "qrcode.react";
 
 function ProductDetailsModal({ show, onHide, product }) {
   if (!product) return null;
+
+  const categoryLabels = {
+    LEAVENED: "Leavened",
+    CAKE: "Cake",
+    COOKIE: "Cookie",
+    CHOCOLATE: "Chocolate",
+    BREAD: "Bread",
+    DESSERT: "Dessert",
+    OTHER: "Other",
+  };
 
   return (
     <Modal show={show} onHide={onHide} centered size="lg">
@@ -11,21 +21,37 @@ function ProductDetailsModal({ show, onHide, product }) {
       </Modal.Header>
       <Modal.Body>
         <Tabs defaultActiveKey="overview" className="mb-3" fill>
-          {/* Overview */}
+          {/* OVERVIEW */}
           <Tab eventKey="overview" title="Overview">
             <div className="text-center mb-3">
               {product.image ? (
-                <Image src={product.image} alt={product.name} fluid rounded style={{ maxHeight: "200px" }} />
+                <Image
+                  src={product.image}
+                  alt={product.name}
+                  fluid
+                  rounded
+                  style={{ maxHeight: "240px", objectFit: "cover" }}
+                />
               ) : (
-                <div className="text-muted">No image available</div>
+                <div className="text-muted py-5 border rounded">
+                  No image available
+                </div>
               )}
             </div>
-            <h4>{product.name}</h4>
-            <p>{product.description}</p>
-            <p><strong>Catalog:</strong> {product.catalog?.name || "—"}</p>
+            <h4 className="text-center">{product.name}</h4>
+            <p className="text-center text-muted">{product.description || "No description"}</p>
+            <p className="text-center">
+              <strong>Category:</strong>{" "}
+              <Badge bg="info" text="dark">
+                {categoryLabels[product.category] || product.category}
+              </Badge>
+            </p>
+            <p className="text-center">
+              <strong>Catalog:</strong> {product.catalog?.name || "—"}
+            </p>
           </Tab>
 
-          {/* Accounting Info */}
+          {/* ACCOUNTING */}
           <Tab eventKey="accounting" title="Accounting">
             <Table bordered hover>
               <tbody>
@@ -49,19 +75,22 @@ function ProductDetailsModal({ show, onHide, product }) {
             </Table>
           </Tab>
 
-          {/* QR Code */}
+          {/* QR CODE */}
           <Tab eventKey="qr" title="QR Code">
-              <div className="d-flex justify-content-center align-items-center flex-column py-4">
-                <QRCodeCanvas
-                  value={`${window.location.origin}/products/${product._id}`}
-                  size={180}
-                  includeMargin={true}
-                  bgColor="#ffffff"
-                  fgColor="#000000"
-                />
-                <p className="mt-3 text-muted small">Scan to view product details</p>
-              </div>
-            </Tab>
+            <div className="d-flex flex-column align-items-center justify-content-center py-4">
+              <QRCodeCanvas
+                value={JSON.stringify({
+                  id: product._id,
+                  name: product.name,
+                  category: product.category,
+                  price: product.price,
+                })}
+                size={180}
+                includeMargin
+              />
+              <p className="mt-3 text-muted small">Scan to view product details</p>
+            </div>
+          </Tab>
         </Tabs>
       </Modal.Body>
     </Modal>

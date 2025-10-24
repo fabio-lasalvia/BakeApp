@@ -13,6 +13,8 @@ import CustomerOrders from "./pages/CustomerOrders";
 import PurchaseOrders from "./pages/PurchaseOrders";
 import Invoices from "./pages/Invoices";
 import InvoicePrint from "./pages/InvoicePrint";
+import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 
 function App() {
     return (
@@ -41,6 +43,9 @@ function App() {
                          <Route path="purchase-orders" element={<PurchaseOrders />} />
                         <Route path="invoices" element={<Invoices />} />
                         <Route path="print/invoice/:id" element={<InvoicePrint />} />
+
+                        <Route path="/me" element={<Profile />} />
+                        <Route path="/settings" element={<Settings />} />
                     </Route>
                 </Routes>
             </AuthProvider>

@@ -21,9 +21,9 @@ function UsersTable() {
 
   const isAdmin = loggedUser?.role === "ADMIN";
 
-  //////////////////////
-  ///// LOADING UI /////
-  //////////////////////
+  ////////////////////////
+  ///// LOADING STATE ////
+  ////////////////////////
   if (loading)
     return (
       <div className="text-center p-4">
@@ -142,43 +142,37 @@ function UsersTable() {
   };
 
   //////////////////////////
-  ///// RETURN LAYOUT //////
+  ///// RETURN LAYOUT ////// 
   //////////////////////////
   return (
     <div className="mt-4">
       {/* HEADER */}
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h2 className="fw-bold text-primary mb-0">Users Management</h2>
-
-        {/* ADD BUTTON (only admin) */}
         {isAdmin && (
           <Button variant="success" onClick={() => setShowAddModal(true)}>
-            <i className="bi bi-plus-circle me-2"></i> Add User
+            <i className="bi bi-plus-circle me-2"></i>Add User
           </Button>
         )}
       </div>
 
       {/* ACCORDION MULTI-OPEN */}
       <Accordion alwaysOpen>
-        <Accordion.Item eventKey="0">
-          <Accordion.Header>Admins</Accordion.Header>
-          <Accordion.Body>{renderTable("ADMIN")}</Accordion.Body>
-        </Accordion.Item>
-
-        <Accordion.Item eventKey="1">
-          <Accordion.Header>Customers</Accordion.Header>
-          <Accordion.Body>{renderTable("CUSTOMER")}</Accordion.Body>
-        </Accordion.Item>
-
-        <Accordion.Item eventKey="2">
-          <Accordion.Header>Employees</Accordion.Header>
-          <Accordion.Body>{renderTable("EMPLOYEE")}</Accordion.Body>
-        </Accordion.Item>
-
-        <Accordion.Item eventKey="3">
-          <Accordion.Header>Suppliers</Accordion.Header>
-          <Accordion.Body>{renderTable("SUPPLIER")}</Accordion.Body>
-        </Accordion.Item>
+        {Object.entries(groupedUsers).map(([role, list], index) => (
+          <Accordion.Item eventKey={index.toString()} key={role}>
+            <Accordion.Header>
+              <div className="d-flex align-items-center justify-content-between w-100">
+                <span>
+                  {role.charAt(0) + role.slice(1).toLowerCase()}
+                  <Badge bg="secondary" pill className="ms-2">
+                    {list.length}
+                  </Badge>
+                </span>
+              </div>
+            </Accordion.Header>
+            <Accordion.Body>{renderTable(role)}</Accordion.Body>
+          </Accordion.Item>
+        ))}
       </Accordion>
 
       {/* MODALS */}

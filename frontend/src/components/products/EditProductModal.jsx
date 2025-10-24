@@ -1,16 +1,22 @@
-import { Modal, Button, Form, Alert, InputGroup } from "react-bootstrap";
-import { useState, useEffect } from "react";
+import { Modal, Button, Form, Alert, Spinner } from "react-bootstrap";
+import { useEffect, useState } from "react";
 import useUpdateProduct from "../../hooks/products/useUpdateProduct";
 import useIndexCatalogs from "../../hooks/catalogs/useIndexCatalogs";
-import useCreateCatalog from "../../hooks/catalogs/useCreateCatalog";
 
 function EditProductModal({ show, onHide, product, refetch }) {
   const { update, loading } = useUpdateProduct();
-  const { catalogs, refetch: refetchCatalogs } = useIndexCatalogs();
-  const { create: createCatalog } = useCreateCatalog();
+  const { catalogs } = useIndexCatalogs();
 
-  const [formData, setFormData] = useState({});
-  const [newCatalogName, setNewCatalogName] = useState("");
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    price: "",
+    category: "OTHER",
+    catalog: "",
+    available: true,
+    image: null,
+  });
+
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -19,8 +25,9 @@ function EditProductModal({ show, onHide, product, refetch }) {
         name: product.name || "",
         description: product.description || "",
         price: product.price || "",
-        available: product.available ?? true,
+        category: product.category || "OTHER",
         catalog: product.catalog?._id || "",
+        available: product.available ?? true,
         image: null,
       });
     }
@@ -37,18 +44,6 @@ function EditProductModal({ show, onHide, product, refetch }) {
     }
   };
 
-  const handleCreateCatalog = async () => {
-    if (!newCatalogName.trim()) return;
-    try {
-      const newCatalog = await createCatalog({ name: newCatalogName });
-      setFormData((prev) => ({ ...prev, catalog: newCatalog._id }));
-      setNewCatalogName("");
-      await refetchCatalogs();
-    } catch (error) {
-      console.error("Error creating catalog:", error);
-    }
-  };
-
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError(null);
@@ -57,7 +52,6 @@ function EditProductModal({ show, onHide, product, refetch }) {
       Object.entries(formData).forEach(([key, value]) => {
         if (value !== null && value !== "") data.append(key, value);
       });
-
       await update(product._id, data);
       onHide();
       refetch();
@@ -67,74 +61,81 @@ function EditProductModal({ show, onHide, product, refetch }) {
   };
 
   return (
-    <Modal show={show} onHide={onHide} centered>
+    <Modal show={show} onHide={onHide} centered size="lg">
       <Modal.Header closeButton>
         <Modal.Title>Edit Product</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         {error && <Alert variant="danger">{error}</Alert>}
-        <Form onSubmit={handleSubmit} encType="multipart/form-data">
-          <Form.Group className="mb-3">
-            <Form.Label>Name</Form.Label>
-            <Form.Control type="text" name="name" value={formData.name} onChange={handleChange} required />
-          </Form.Group>
+        {!product ? (
+          <div className="text-center py-3">
+            <Spinner animation="border" variant="primary" />
+          </div>
+        ) : (
+          <Form onSubmit={handleSubmit} encType="multipart/form-data">
+            <Form.Group className="mb-3">
+              <Form.Label>Name</Form.Label>
+              <Form.Control type="text" name="name" value={formData.name} onChange={handleChange} />
+            </Form.Group>
 
-          <Form.Group className="mb-3">
-            <Form.Label>Description</Form.Label>
-            <Form.Control as="textarea" name="description" value={formData.description} rows={3} onChange={handleChange} />
-          </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Description</Form.Label>
+              <Form.Control as="textarea" name="description" rows={3} value={formData.description} onChange={handleChange} />
+            </Form.Group>
 
-          <Form.Group className="mb-3">
-            <Form.Label>Price (€)</Form.Label>
-            <Form.Control type="number" name="price" value={formData.price} step="0.01" onChange={handleChange} required />
-          </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Price (€)</Form.Label>
+              <Form.Control type="number" name="price" step="0.01" value={formData.price} onChange={handleChange} />
+            </Form.Group>
 
-          <Form.Group className="mb-3">
-            <Form.Label>Catalog</Form.Label>
-            <InputGroup>
+            <Form.Group className="mb-3">
+              <Form.Label>Category</Form.Label>
+              <Form.Select name="category" value={formData.category} onChange={handleChange}>
+                <option value="LEAVENED">Leavened</option>
+                <option value="CAKE">Cake</option>
+                <option value="COOKIE">Cookie</option>
+                <option value="CHOCOLATE">Chocolate</option>
+                <option value="BREAD">Bread</option>
+                <option value="DESSERT">Dessert</option>
+                <option value="OTHER">Other</option>
+              </Form.Select>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Catalog</Form.Label>
               <Form.Select name="catalog" value={formData.catalog} onChange={handleChange}>
-                <option value="">-- Select Catalog --</option>
-                {catalogs.map((cat) => (
-                  <option key={cat._id} value={cat._id}>
-                    {cat.name}
-                  </option>
+                <option value="">— Select Catalog —</option>
+                {catalogs?.map((c) => (
+                  <option key={c._id} value={c._id}>{c.name}</option>
                 ))}
               </Form.Select>
-              <Form.Control
-                placeholder="New catalog name"
-                value={newCatalogName}
-                onChange={(e) => setNewCatalogName(e.target.value)}
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Image</Form.Label>
+              <Form.Control type="file" name="image" accept="image/*" onChange={handleChange} />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Check
+                type="checkbox"
+                name="available"
+                checked={formData.available}
+                onChange={handleChange}
+                label="Available"
               />
-              <Button variant="outline-success" onClick={handleCreateCatalog}>
-                <i className="bi bi-plus-circle"></i>
+            </Form.Group>
+
+            <div className="text-end">
+              <Button variant="secondary" onClick={onHide} className="me-2">
+                Cancel
               </Button>
-            </InputGroup>
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <Form.Check
-              type="checkbox"
-              name="available"
-              checked={formData.available}
-              onChange={handleChange}
-              label="Available"
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <Form.Label>Image</Form.Label>
-            <Form.Control type="file" name="image" accept="image/*" onChange={handleChange} />
-          </Form.Group>
-
-          <div className="text-end">
-            <Button variant="secondary" onClick={onHide} className="me-2">
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary" disabled={loading}>
-              {loading ? "Saving..." : "Save Changes"}
-            </Button>
-          </div>
-        </Form>
+              <Button type="submit" variant="primary" disabled={loading}>
+                {loading ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          </Form>
+        )}
       </Modal.Body>
     </Modal>
   );

@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 
 ///// Import models /////
 import Product from "../models/Product.js";
-import CustomerOrder from "../models/CustomerOrder.js";
 import Catalog from "../models/Catalog.js";
 
 ///// Import helpers /////
@@ -13,10 +12,7 @@ import { createError } from "../helpers/createError.js";
 //////////////////////////////
 export async function index(request, response, next) {
   try {
-    const products = await Product.find()
-      .populate("catalog")
-      .populate("customerOrder");
-
+    const products = await Product.find().populate("catalog");
     return response.status(200).json(products);
   } catch (error) {
     next(error);
@@ -28,10 +24,7 @@ export async function index(request, response, next) {
 ////////////////////////////////
 export async function show(request, response, next) {
   try {
-    const product = await Product.findById(request.params.id)
-      .populate("catalog")
-      .populate("customerOrder");
-
+    const product = await Product.findById(request.params.id).populate("catalog");
     if (!product) return next(createError(404, "Product not found"));
     return response.status(200).json(product);
   } catch (error) {
@@ -44,33 +37,25 @@ export async function show(request, response, next) {
 /////////////////////////////////
 export async function create(request, response, next) {
   try {
-    const { name, description, price, catalog, customerOrder, available } = request.body;
+    const { name, description, price, category, catalog, available } = request.body;
     const image = request.file?.path || null;
 
-    if (!name || !price) {
-      return next(createError(400, "Name and price are required"));
-    }
+    if (!name || !price || !category)
+      return next(createError(400, "Name, price and category are required"));
 
-    // Verifica Catalog se presente
     if (catalog) {
       const existingCatalog = await Catalog.findById(catalog);
       if (!existingCatalog) return next(createError(404, "Catalog not found"));
-    }
-
-    // Verifica CustomerOrder se presente
-    if (customerOrder) {
-      const existingOrder = await CustomerOrder.findById(customerOrder);
-      if (!existingOrder) return next(createError(404, "Customer order not found"));
     }
 
     const product = await Product.create({
       name,
       description,
       price,
+      category,
       image,
       catalog: catalog || null,
-      customerOrder: customerOrder || null,
-      available: available !== undefined ? available : true,
+      available: available ?? true,
     });
 
     return response.status(201).json({
@@ -82,12 +67,13 @@ export async function create(request, response, next) {
   }
 }
 
+
 ////////////////////////////////
 ///// PUT - UPDATE PRODUCT /////
 ////////////////////////////////
 export async function update(request, response, next) {
   try {
-    const { name, description, price, catalog, customerOrder, available } = request.body;
+    const { name, description, price, category, catalog, available } = request.body;
     const image = request.file?.path;
 
     const existingProduct = await Product.findById(request.params.id);
@@ -98,17 +84,12 @@ export async function update(request, response, next) {
       if (!existingCatalog) return next(createError(404, "Catalog not found"));
     }
 
-    if (customerOrder) {
-      const existingOrder = await CustomerOrder.findById(customerOrder);
-      if (!existingOrder) return next(createError(404, "Customer order not found"));
-    }
-
     existingProduct.name = name || existingProduct.name;
     existingProduct.description = description || existingProduct.description;
-    existingProduct.price = price !== undefined ? price : existingProduct.price;
-    existingProduct.available = available !== undefined ? available : existingProduct.available;
+    existingProduct.price = price ?? existingProduct.price;
+    existingProduct.category = category || existingProduct.category;
+    existingProduct.available = available ?? existingProduct.available;
     existingProduct.catalog = catalog || existingProduct.catalog;
-    existingProduct.customerOrder = customerOrder || existingProduct.customerOrder;
     if (image) existingProduct.image = image;
 
     await existingProduct.save();
@@ -130,9 +111,7 @@ export async function remove(request, response, next) {
     const deletedProduct = await Product.findByIdAndDelete(request.params.id);
     if (!deletedProduct) return next(createError(404, "Product not found"));
 
-    return response.status(200).json({
-      message: "Product deleted successfully",
-    });
+    return response.status(200).json({ message: "Product deleted successfully" });
   } catch (error) {
     next(error);
   }

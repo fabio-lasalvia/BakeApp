@@ -9,6 +9,8 @@ import {
   BagFill,
   Receipt,
   ClipboardDataFill,
+  Person,
+  Gear,
 } from "react-bootstrap-icons";
 
 export default function Home() {
@@ -36,6 +38,12 @@ export default function Home() {
       text: "Manage your team, employees, and customers.",
       icon: <PeopleFill size={32} />,
       link: "/users",
+    },    
+    {
+      title: "Catalogs",
+      text: "Configure catalogs and seasonal offerings.",
+      icon: <FolderFill size={32} />,
+      link: "/catalogs",
     },
     {
       title: "Products",
@@ -44,10 +52,10 @@ export default function Home() {
       link: "/products",
     },
     {
-      title: "Catalogs",
-      text: "Configure catalogs and seasonal offerings.",
-      icon: <FolderFill size={32} />,
-      link: "/catalogs",
+      title: "Ingredients",
+      text: "View supplier's products.",
+      icon: <BoxFill size={32} />,
+      link: "/ingredients",
     },
     {
       title: "Customer Orders",
@@ -66,6 +74,18 @@ export default function Home() {
       text: "Generate and check all issued invoices.",
       icon: <Receipt size={32} />,
       link: "/invoices",
+    },
+    {
+      title: "Settings",
+      text: "Generate and check all issued invoices.",
+      icon: <Gear size={32} />,
+      link: "/settings",
+    },
+    {
+      title: "Profile",
+      text: "Generate and check all issued invoices.",
+      icon: <Person size={32} />,
+      link: "/me",
     },
   ];
 

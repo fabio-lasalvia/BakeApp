@@ -1,4 +1,4 @@
-import { Table, Button, Spinner } from "react-bootstrap";
+import { Accordion, Table, Button, Spinner, Badge, Form } from "react-bootstrap";
 import { useState } from "react";
 import useIndexProducts from "../../hooks/products/useIndexProducts";
 import useDeleteProduct from "../../hooks/products/useDeleteProduct";
@@ -14,12 +14,24 @@ function ProductsTable() {
 
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  // Hook per gestire i modali
   const addModal = useHandleModal();
   const editModal = useHandleModal();
   const detailsModal = useHandleModal();
   const confirmModal = useHandleModal();
 
+  const categoryLabels = {
+    LEAVENED: "Leavened",
+    CAKE: "Cake",
+    COOKIE: "Cookie",
+    CHOCOLATE: "Chocolate",
+    BREAD: "Bread",
+    DESSERT: "Dessert",
+    OTHER: "Other",
+  };
+
+  /////////////////////////
+  ///// LOADING STATE /////
+  /////////////////////////
   if (loading)
     return (
       <div className="text-center p-4">
@@ -34,23 +46,19 @@ function ProductsTable() {
       </div>
     );
 
-  if (!products || products.length === 0)
-    return (
-      <div className="text-center mt-4">
-        <p>No products found.</p>
-        <Button variant="success" onClick={addModal.openModal}>
-          <i className="bi bi-plus-circle me-2"></i>Add Product
-        </Button>
+  //////////////////////////////
+  ///// GROUP BY CATEGORY  /////
+  //////////////////////////////
+  const groupedProducts = products.reduce((acc, product) => {
+    const category = product.category || "OTHER";
+    if (!acc[category]) acc[category] = [];
+    acc[category].push(product);
+    return acc;
+  }, {});
 
-        {/* Modale di aggiunta */}
-        <AddProductModal
-          show={addModal.isOpen}
-          onHide={addModal.closeModal}
-          refetch={refetch}
-        />
-      </div>
-    );
-
+  ////////////////////////////
+  ///// DELETE PRODUCT ///////
+  ////////////////////////////
   const handleDelete = async () => {
     if (!selectedProduct) return;
     await remove(selectedProduct._id);
@@ -58,74 +66,126 @@ function ProductsTable() {
     confirmModal.closeModal();
   };
 
+  ////////////////////////////
+  ///// RETURN LAYOUT ////////
+  ////////////////////////////
   return (
     <div className="mt-4">
+      {/* HEADER */}
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2 className="fw-bold text-primary">Products Management</h2>
+        <h2 className="fw-bold text-primary mb-0">Products Management</h2>
         <Button variant="success" onClick={addModal.openModal}>
           <i className="bi bi-plus-circle me-2"></i>Add Product
         </Button>
       </div>
 
-      <Table striped bordered hover responsive className="align-middle text-center">
-        <thead className="table-light">
-          <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Category</th>
-            <th>Price (€)</th>
-            <th>Catalog</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map((product, index) => (
-            <tr key={product._id}>
-              <td>{index + 1}</td>
-              <td>{product.name}</td>
-              <td>{product.category}</td>
-              <td>{product.price?.toFixed(2)}</td>
-              <td>{product.catalogs || "-"}</td>
-              <td>
-                <div className="d-flex justify-content-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline-primary"
-                    onClick={() => {
-                      setSelectedProduct(product);
-                      detailsModal.openModal();
-                    }}
-                  >
-                    <i className="bi bi-eye"></i>
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline-warning"
-                    onClick={() => {
-                      setSelectedProduct(product);
-                      editModal.openModal();
-                    }}
-                  >
-                    <i className="bi bi-pencil"></i>
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline-danger"
-                    onClick={() => {
-                      setSelectedProduct(product);
-                      confirmModal.openModal();
-                    }}
-                  >
-                    <i className="bi bi-trash"></i>
-                  </Button>
+      {/* ACCORDION MULTI-OPEN */}
+      <Accordion alwaysOpen>
+        {Object.keys(groupedProducts).map((category, index) => {
+          const items = groupedProducts[category];
+          return (
+            <Accordion.Item eventKey={index.toString()} key={category}>
+              <Accordion.Header>
+                <div className="d-flex align-items-center justify-content-between w-100">
+                  <span>
+                    {categoryLabels[category] || category}
+                    <Badge bg="secondary" pill className="ms-2">
+                      {items.length}
+                    </Badge>
+                  </span>
                 </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
+              </Accordion.Header>
 
-      {/* Modali */}
+              <Accordion.Body>
+                <Table striped bordered hover responsive className="align-middle text-center">
+                  <thead className="table-light">
+                    <tr>
+                      <th>#</th>
+                      <th>Image</th>
+                      <th>Name</th>
+                      <th>Price (€)</th>
+                      <th>Catalog</th>
+                      <th>Available</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {items.map((product, index) => (
+                      <tr key={product._id}>
+                        <td>{index + 1}</td>
+                        <td>
+                          {product.image ? (
+                            <img
+                              src={product.image}
+                              alt={product.name}
+                              style={{
+                                width: "50px",
+                                height: "50px",
+                                objectFit: "cover",
+                                borderRadius: "8px",
+                              }}
+                            />
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                        <td>{product.name}</td>
+                        <td>{product.price?.toFixed(2)}</td>
+                        <td>{product.catalog?.name || "—"}</td>
+                        <td>
+                          <Form.Check
+                            type="checkbox"
+                            checked={product.available}
+                            readOnly
+                            className="d-inline-block"
+                            style={{ pointerEvents: "none" }}
+                          />
+                        </td>
+                        <td>
+                          <div className="d-flex justify-content-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline-primary"
+                              onClick={() => {
+                                setSelectedProduct(product);
+                                detailsModal.openModal();
+                              }}
+                            >
+                              <i className="bi bi-eye"></i>
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline-warning"
+                              onClick={() => {
+                                setSelectedProduct(product);
+                                editModal.openModal();
+                              }}
+                            >
+                              <i className="bi bi-pencil"></i>
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline-danger"
+                              onClick={() => {
+                                setSelectedProduct(product);
+                                confirmModal.openModal();
+                              }}
+                            >
+                              <i className="bi bi-trash"></i>
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </Accordion.Body>
+            </Accordion.Item>
+          );
+        })}
+      </Accordion>
+
+      {/* MODALS */}
       <AddProductModal
         show={addModal.isOpen}
         onHide={addModal.closeModal}
@@ -147,7 +207,7 @@ function ProductsTable() {
         closeModal={confirmModal.closeModal}
         onConfirm={handleDelete}
         title="Confirm Deletion"
-        message={`Are you sure you want to delete ${selectedProduct?.name}? This action cannot be undone.`}
+        message={`Are you sure you want to delete ${selectedProduct?.name}?`}
       />
     </div>
   );

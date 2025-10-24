@@ -8,7 +8,8 @@ import {
   BagFill,
   Receipt,
   GearFill,
-  ClipboardDataFill
+  ClipboardDataFill,
+  PersonFill
 } from "react-bootstrap-icons";
 
 
@@ -61,6 +62,10 @@ export default function MyNavbar({ show = false, onHide = () => {} }) {
 
       {/* Footer link */}
       <div className="mt-auto pt-3">
+        <Nav.Link as={Link} to="/me" onClick={onHide} className="sidebar-link d-flex align-items-center">
+          <PersonFill className="me-2" size={18} />
+          <span>Profile</span>
+        </Nav.Link>
         <Nav.Link as={Link} to="/settings" onClick={onHide} className="sidebar-link d-flex align-items-center">
           <GearFill className="me-2" size={18} />
           <span>Settings</span>
