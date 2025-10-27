@@ -31,7 +31,9 @@ export async function showProduct(id) {
 /////////////////////////////////
 export async function createProduct(data) {
   try {
-    const response = await axios.post("/products", data);
+    const response = await axios.post("/products", data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return response.data;
   } catch (error) {
     console.error("Error creating product:", error.response?.data || error.message);
@@ -44,7 +46,9 @@ export async function createProduct(data) {
 ////////////////////////////////
 export async function updateProduct(id, data) {
   try {
-    const response = await axios.put(`/products/${id}`, data);
+    const response = await axios.put(`/products/${id}`, data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return response.data;
   } catch (error) {
     console.error("Error updating product:", error.response?.data || error.message);

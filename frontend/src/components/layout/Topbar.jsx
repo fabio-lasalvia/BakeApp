@@ -4,11 +4,13 @@ import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import useMyProfile from "../../hooks/users/useMyProfile";
 
 const MySwal = withReactContent(Swal);
 
 export default function Topbar({ onToggleSidebar = () => {} }) {
   const { user, logout } = useAuth();
+   const { profile, loading: loadingProfile, error, refetch } = useMyProfile();
   const navigate = useNavigate();
 
   // Gestione logout con conferma + toast
@@ -74,13 +76,16 @@ const handleLogout = async () => {
             id="user-menu"
           >
             <Image
-              src=""
-              roundedCircle
-              width={34}
-              height={34}
-              alt="User Avatar"
-              className="me-2"
-            />
+              src={
+                  profile?.avatar ||
+                  "https://res.cloudinary.com/dbqckc5sl/image/upload/v1759400955/segnapostoNoImage_rumvcb.png"
+              }
+               roundedCircle
+               width={34}
+               height={34}
+               alt="User Avatar"
+               className="me-2"
+              />
             <span className="fw-semibold text-dark d-none d-md-inline">
               {user?.name || "User"}
             </span>

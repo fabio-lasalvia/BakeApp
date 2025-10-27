@@ -20,8 +20,8 @@ const router = express.Router();
 router.use(protect);
 
 // Ogni utente può visualizzare e aggiornare il proprio profilo
-router.get("/me", protect, getMe);
-router.put("/me", protect, uploadCloudinary.single("avatar"), updateMe);
+router.get("/me", getMe);
+router.put("/me", uploadCloudinary.single("avatar"), updateMe);
 
 
 ///// Rotte riservate solo agli admin /////

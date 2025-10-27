@@ -1,9 +1,11 @@
-import { Container, Row, Col, Card, Spinner, Alert, Button, Badge } from "react-bootstrap";
+import { Container, Row, Col, Card, Spinner, Alert, Button, Badge, Image } from "react-bootstrap";
 import useMyProfile from "../hooks/users/useMyProfile";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 function Profile() {
   const { profile, loading, error } = useMyProfile();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   if (loading)
@@ -26,7 +28,17 @@ function Profile() {
         <Card.Body>
           <Row className="align-items-center">
             <Col md={3} className="text-center">
-              <i className="bi bi-person-circle text-primary" style={{ fontSize: "6rem" }}></i>
+              <Image
+              src={
+                  profile?.avatar ||
+                  "https://res.cloudinary.com/dbqckc5sl/image/upload/v1759400955/segnapostoNoImage_rumvcb.png"
+              }
+               roundedCircle
+               width={90}
+               height={90}
+               alt="User Avatar"
+               className="me-2"
+              />
             </Col>
             <Col md={9}>
               <h2 className="fw-bold text-primary mb-1">

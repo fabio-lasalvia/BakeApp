@@ -1,4 +1,4 @@
-# 🍰 MyBakeApp – Backend
+# 🍰 BakeApp – Backend
 
 Backend gestionale per pasticcerie realizzato con lo stack **MERN (MongoDB, Express, React, Node.js)**.  
 Il sistema gestisce utenti con ruoli differenziati (`ADMIN`, `CUSTOMER`, `EMPLOYEE`, `SUPPLIER`) e copre l’intero ciclo operativo di una pasticceria: ordini, fornitori, ingredienti, prodotti, cataloghi e fatture.
@@ -52,8 +52,8 @@ Il sistema gestisce utenti con ruoli differenziati (`ADMIN`, `CUSTOMER`, `EMPLOY
 ### 1️⃣ Clona il progetto
 
 ```bash
-git clone https://github.com/<tuo-username>/mybakeapp-backend.git
-cd mybakeapp-backend
+git clone https://github.com/<tuo-username>/bakeapp-backend.git
+cd bakeapp-backend
 ```
 
 ### 2️⃣ Installa le dipendenze
@@ -67,22 +67,49 @@ npm install
 Crea un file `.env` nella root del progetto con le seguenti variabili:
 
 ```env
-# Server
+##################
+##### Server #####
+##################
 PORT=5000
-MONGO_URI=mongodb+srv://<user>:<password>@<cluster-url>/<db-name>
-JWT_SECRET=your_jwt_secret
-JWT_EXPIRESIN=1d
 
-# Mailer
-EMAIL_HOST=smtp.yourmailserver.com
-EMAIL_PORT=587
-EMAIL_USER=your_email@example.com
-EMAIL_PASSWORD=your_password
+####################
+##### Database #####
+####################
+MONGODB_CONNECTION_URI=your_mongodb_connection_string
 
-# Cloudinary
-CLOUDINARY_NAME=your_cloud_name
+######################
+##### Cloudinary #####
+######################
+CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
+
+############################
+##### Email (SendGrid) #####
+############################
+EMAIL_HOST=smtp.sendgrid.net
+EMAIL_PORT=587
+EMAIL_USER=apikey
+EMAIL_PASSWORD=your_sendgrid_api_key
+
+#############################
+##### JWT (auth tokens) #####
+#############################
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRESIN=30d
+
+########################
+##### Google OAuth #####
+########################
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_CALLBACK_PATH=/api/v1/callback-google
+
+#################
+##### Hosts #####
+#################
+BACKEND_HOST=http://localhost:5000
+FRONTEND_HOST=http://localhost:5173
 ```
 
 <hr>
@@ -107,52 +134,59 @@ Il server sarà disponibile su
 backend/
 ├── config/
 │   └── db.js
+|   └── passport.config.js
 │
 ├── controllers/
 │   ├── authController.js
+|   ├── catalogController.js
 │   ├── customerController.js
-│   ├── employeeController.js
-│   ├── supplierController.js
 │   ├── customerOrderController.js
-│   ├── purchaseOrderController.js
+│   ├── employeeController.js
 │   ├── ingredientController.js
-│   ├── productController.js
 │   ├── invoiceController.js
-│   └── catalogController.js
+│   ├── productController.js
+│   ├── purchaseOrderController.js
+│   ├── supplierController.js
+│   └── userController.js
 │
+├── helpers/
+│   ├── createError.js
+│   ├── jwt.js
+│   └── mailer.js
+|
+├── middlewares/
+|   ├── common/
+|   |   ├── errorHandler.js
+|   |   └── uploadCloudinary.js
+│   ├── authMiddleware.js
+│   └── roleMiddleware.js
+|
 ├── models/
-│   ├── User.js
+│   ├── Catalog.js
 │   ├── Customer.js
-│   ├── Employee.js
-│   ├── Supplier.js
 │   ├── CustomerOrder.js
-│   ├── PurchaseOrder.js
+│   ├── Employee.js
 │   ├── Ingredient.js
-│   ├── Product.js
 │   ├── Invoice.js
-│   └── Catalog.js
+│   ├── Product.js
+│   ├── PurchaseOrder.js
+│   ├── Supplier.js
+│   └── User.js
 │
 ├── routes/
 │   ├── authRoutes.js
+│   ├── catalogRoutes.js
+│   ├── customerOrderRoutes.js
 │   ├── customerRoutes.js
 │   ├── employeeRoutes.js
-│   ├── supplierRoutes.js
-│   ├── customerOrderRoutes.js
-│   ├── purchaseOrderRoutes.js
 │   ├── ingredientRoutes.js
-│   ├── productRoutes.js
 │   ├── invoiceRoutes.js
-│   └── catalogRoutes.js
-│
-├── middlewares/
-│   ├── authMiddleware.js
-│   ├── roleMiddleware.js
-│   └── errorHandler.js
-│
-├── helpers/
-│   ├── jwt.js
-│   ├── mailer.js
-│   └── createError.js
+│   ├── productRoutes.js
+│   ├── purchaseOrderRoutes.js
+│   ├── supplierRoutes.js
+│   └── userRoutes.js
+|
+├── .env
 │
 ├── server.js
 └── package.json
@@ -165,7 +199,7 @@ backend/
 | Ruolo | Permessi principali |
 |-------|----------------------|
 | **ADMIN** | Accesso completo, gestione utenti, cataloghi, fatture |
-| **EMPLOYEE** | Gestione ordini clienti e fornitori, magazzino |
+| **EMPLOYEE** | Gestione ordini clienti e fornitori |
 | **SUPPLIER** | Consultazione ordini di fornitura |
 | **CUSTOMER** | Creazione e consultazione ordini personali |
 
@@ -179,7 +213,7 @@ Esempi di endpoint REST:
 |--------|-----------|-------------|
 | `POST` | `/api/auth/signup` | Registrazione utente |
 | `POST` | `/api/auth/login` | Login utente |
-| `POST` | `/api/auth/google` | Login via Google |
+| `POST` | `/api/auth/login-google` | Login via Google |
 | `GET` | `/api/customers` | Lista clienti (admin only) |
 | `GET` | `/api/products` | Lista prodotti disponibili |
 | `POST` | `/api/customer-orders` | Creazione ordine cliente |
@@ -191,7 +225,7 @@ Esempi di endpoint REST:
 ## 🧪 Middleware & Sicurezza
 
 - `protect`: verifica e decodifica JWT  
-- `authorizeRoles`: limita l’accesso in base al ruolo utente  
+- `authorizeRoles`: limita l'accesso in base al ruolo utente  
 - `errorHandler`: gestione centralizzata degli errori  
 - `helmet`: protezione delle intestazioni HTTP  
 - `cors`: abilitazione cross-origin per frontend React  
@@ -250,6 +284,4 @@ http://localhost:5000/api/docs
 
 ## 🧾 Licenza
 
-Distribuito sotto licenza **MIT**.  
 © 2025 **BakeApp** – All rights reserved.
-

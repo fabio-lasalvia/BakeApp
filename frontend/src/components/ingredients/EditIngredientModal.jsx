@@ -154,14 +154,14 @@ function EditIngredientModal({ show, onHide, ingredient, refetch }) {
                       style={{ width: 100, height: 100, objectFit: "cover" }}
                     />
                   )}
-                  {preview && (
+                  {/* {preview && (
                     <Image
                       src={preview}
                       alt="preview"
                       rounded
                       style={{ width: 100, height: 100, objectFit: "cover" }}
                     />
-                  )}
+                  )} */}
                 </div>
               </Form.Group>
             </Col>

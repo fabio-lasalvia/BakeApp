@@ -10,3 +10,6 @@ build/
 # System
 .DS_Store
 Thumbs.db
+
+# Scripts
+scripts/

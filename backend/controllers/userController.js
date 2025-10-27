@@ -234,6 +234,11 @@ export async function getMe(request, response, next) {
 /////////////////////////////////////
 export async function updateMe(request, response, next) {
   try {
+    console.log("Incoming profile update request");
+    console.log("User ID:", request.user?._id);
+    console.log("Uploaded file:", request.file);
+    console.log("Body:", request.body);
+
     const updates = request.body;
 
     const user = await User.findById(request.user._id)
@@ -249,14 +254,15 @@ export async function updateMe(request, response, next) {
     if (updates.email) user.email = updates.email;
     if (updates.password) user.password = updates.password;
 
-    // Salva avatar Cloudinary se presente
+    // Upload avatar se presente
     if (request.file && request.file.path) {
+      console.log("Cloudinary upload success:", request.file.path);
       user.avatar = request.file.path;
     }
 
     await user.save();
 
-    // Aggiornamento entità collegate
+    // Aggiornamento dati collegati
     if (user.role === "CUSTOMER" && user.customer) {
       await Customer.findByIdAndUpdate(user.customer, {
         phone: updates.phone,
@@ -278,12 +284,15 @@ export async function updateMe(request, response, next) {
       });
     }
 
+    console.log("Profile updated for:", user.email);
+
     return response.status(200).json({
       message: "Profile updated successfully",
       user,
     });
   } catch (error) {
-    console.error("❌ Error updating profile:", error);
-    next(error);
+    console.error("Error updating profile:", error);
+    return next(createError(500, "Internal Server Error"));
   }
 }
+
