@@ -13,12 +13,15 @@ import useUpdateMyProfile from "../hooks/users/useUpdateMyProfile";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import { ArrowLeft } from "react-bootstrap-icons";
+import { useNavigate } from "react-router-dom";
 
 const MySwal = withReactContent(Swal);
 
 function Settings() {
   const { profile, loading: loadingProfile, error, refetch } = useMyProfile();
   const { update, loading } = useUpdateMyProfile();
+
+  const navigate = useNavigate()
 
   const [formData, setFormData] = useState({
     name: "",
