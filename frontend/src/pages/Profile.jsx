@@ -2,6 +2,7 @@ import { Container, Row, Col, Card, Spinner, Alert, Button, Badge, Image } from 
 import useMyProfile from "../hooks/users/useMyProfile";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { ArrowLeft } from "react-bootstrap-icons";
 
 function Profile() {
   const { profile, loading, error } = useMyProfile();
@@ -24,6 +25,14 @@ function Profile() {
 
   return (
     <Container className="py-5">
+      <Button
+              variant="outline-primary"
+              className="d-flex align-items-center gap-2 mb-3"
+              onClick={() => navigate("/home")}
+            >
+              <ArrowLeft size={20} />
+              Back
+            </Button>
       <Card className="shadow-lg border-0 rounded-4">
         <Card.Body>
           <Row className="align-items-center">

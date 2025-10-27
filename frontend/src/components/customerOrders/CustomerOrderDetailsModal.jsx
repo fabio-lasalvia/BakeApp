@@ -19,6 +19,11 @@ function CustomerOrderDetailsModal({ show, onHide, order }) {
     }
   };
 
+  const formatPrice = (value) =>
+    typeof value === "number" && !isNaN(value)
+      ? value.toFixed(2)
+      : "0.00";
+
   return (
     <Modal show={show} onHide={onHide} centered size="lg">
       <Modal.Header closeButton>
@@ -65,7 +70,7 @@ function CustomerOrderDetailsModal({ show, onHide, order }) {
                 </tr>
                 <tr>
                   <td><strong>Total Amount</strong></td>
-                  <td>€{order.totalAmount?.toFixed(2)}</td>
+                  <td>€{formatPrice(order.totalAmount)}</td>
                 </tr>
                 <tr>
                   <td><strong>Notes</strong></td>
@@ -93,41 +98,52 @@ function CustomerOrderDetailsModal({ show, onHide, order }) {
                     <th>Product</th>
                     <th>Description</th>
                     <th>Price (€)</th>
+                    <th>Qty</th>
+                    <th>Subtotal (€)</th>
                     <th>Image</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {order.products.map((product, index) => (
-                    <tr key={product._id}>
-                      <td>{index + 1}</td>
-                      <td>{product.name}</td>
-                      <td>{product.description || "—"}</td>
-                      <td>{product.price?.toFixed(2) || "—"}</td>
-                      <td>
-                        {product.image ? (
-                          <Image
-                            src={product.image}
-                            alt={product.name}
-                            rounded
-                            style={{
-                              width: "50px",
-                              height: "50px",
-                              objectFit: "cover",
-                            }}
-                          />
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                  {order.products.map((item, index) => {
+                    const product = item.product || item; // fallback
+                    const price = Number(product?.price) || 0;
+                    const quantity = item.quantity || 1;
+                    const subtotal = price * quantity;
+
+                    return (
+                      <tr key={product._id || index}>
+                        <td>{index + 1}</td>
+                        <td>{product.name || "Unnamed product"}</td>
+                        <td>{product.description || "—"}</td>
+                        <td>{formatPrice(price)}</td>
+                        <td>{quantity}</td>
+                        <td>{formatPrice(subtotal)}</td>
+                        <td>
+                          {product.image ? (
+                            <Image
+                              src={product.image}
+                              alt={product.name}
+                              rounded
+                              style={{
+                                width: "50px",
+                                height: "50px",
+                                objectFit: "cover",
+                              }}
+                            />
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
                 <tfoot>
                   <tr className="table-secondary fw-bold">
-                    <td colSpan="3" className="text-end">
+                    <td colSpan="5" className="text-end">
                       TOTAL
                     </td>
-                    <td colSpan="2">€{order.totalAmount?.toFixed(2)}</td>
+                    <td colSpan="2">€{formatPrice(order.totalAmount)}</td>
                   </tr>
                 </tfoot>
               </Table>

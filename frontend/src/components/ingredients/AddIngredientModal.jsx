@@ -1,4 +1,4 @@
-import { Modal, Button, Form, Alert, Image, Row, Col } from "react-bootstrap";
+import { Modal, Button, Form, Alert, Row, Col } from "react-bootstrap";
 import { useState, useEffect } from "react";
 import useCreateIngredient from "../../hooks/ingredients/useCreateIngredient";
 
@@ -14,7 +14,6 @@ function AddIngredientModal({ show, onHide, refetch }) {
     expirationDate: "",
     image: null,
   });
-  const [preview, setPreview] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -27,7 +26,6 @@ function AddIngredientModal({ show, onHide, refetch }) {
         expirationDate: "",
         image: null,
       });
-      setPreview(null);
       setError(null);
     }
   }, [show]);
@@ -35,9 +33,7 @@ function AddIngredientModal({ show, onHide, refetch }) {
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
     if (type === "file") {
-      const file = files?.[0] || null;
-      setFormData((prev) => ({ ...prev, image: file }));
-      setPreview(file ? URL.createObjectURL(file) : null);
+      setFormData((prev) => ({ ...prev, image: files?.[0] || null }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -46,11 +42,13 @@ function AddIngredientModal({ show, onHide, refetch }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+
     try {
       const data = new FormData();
-      Object.entries(formData).forEach(([k, v]) => {
-        if (v !== null && v !== "") data.append(k, v);
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value !== null && value !== "") data.append(key, value);
       });
+
       await create(data);
       refetch?.();
       onHide();
@@ -136,17 +134,12 @@ function AddIngredientModal({ show, onHide, refetch }) {
             <Col md={12}>
               <Form.Group>
                 <Form.Label>Image</Form.Label>
-                <Form.Control type="file" name="image" accept="image/*" onChange={handleChange} />
-                {preview && (
-                  <div className="mt-2">
-                    <Image
-                      src={preview}
-                      alt="preview"
-                      rounded
-                      style={{ width: 100, height: 100, objectFit: "cover" }}
-                    />
-                  </div>
-                )}
+                <Form.Control
+                  type="file"
+                  name="image"
+                  accept="image/*"
+                  onChange={handleChange}
+                />
               </Form.Group>
             </Col>
           </Row>

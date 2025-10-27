@@ -1,19 +1,18 @@
-import { Modal, Button, Form, Alert, Spinner } from "react-bootstrap";
+import { Modal, Button, Form, Alert, Spinner, Table } from "react-bootstrap";
 import Select from "react-select";
-import { useState, useMemo } from "react";
-import { jwtDecode } from "jwt-decode";
+import { useState } from "react";
 import useCreateCustomerOrder from "../../hooks/customerOrders/useCreateCustomerOrder";
 import useIndexCustomers from "../../hooks/customers/useIndexCustomers";
 import useIndexProducts from "../../hooks/products/useIndexProducts";
 
 function AddCustomerOrderModal({ show, onHide, refetch }) {
   const { create, loading } = useCreateCustomerOrder();
-  const { customers, loading: loadingCustomers, error: errorCustomers } = useIndexCustomers();
-  const { products, loading: loadingProducts, error: errorProducts } = useIndexProducts();
+  const { customers, loading: loadingCustomers } = useIndexCustomers();
+  const { products, loading: loadingProducts } = useIndexProducts();
 
   const [formData, setFormData] = useState({
     customer: null,
-    products: [],
+    products: [], // [{ value, label, price, quantity }]
     totalAmount: 0,
     status: "PENDING",
     notes: "",
@@ -21,41 +20,31 @@ function AddCustomerOrderModal({ show, onHide, refetch }) {
 
   const [error, setError] = useState(null);
 
-  // Decodifica token per sapere chi ha creato l'ordine
-  const decoded = useMemo(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return null;
-    try {
-      return jwtDecode(token);
-    } catch {
-      return null;
-    }
-  }, []);
-
-  /////////////////////////////////////////////
-  // Dropdown options con validazione sicura //
-  /////////////////////////////////////////////
+  // Dropdown opzioni clienti
   const customerOptions = (customers || [])
     .filter((c) => c?.user)
     .map((c) => ({
       value: c._id,
-      label: `${c.user.name || "Unnamed"} ${c.user.surname || ""} (${c.user.email || "no-email"})`,
+      label: `${c.user.name || "Unnamed"} ${c.user.surname || ""} (${c.user.email || ""})`,
     }));
 
+  // Dropdown opzioni prodotti
   const productOptions = (products || []).map((p) => ({
     value: p._id,
-    label: `${p.name} — €${p.price?.toFixed(2) || "0.00"}`,
+    label: `${p.name || "Unnamed"} — €${(p.price || 0).toFixed(2)}`,
     price: p.price || 0,
   }));
 
-  //////////////////////////////////
-  // Calcolo totale prodotti scelti //
-  //////////////////////////////////
-  const calculateTotal = (selectedProducts) =>
-    selectedProducts.reduce((sum, p) => sum + (p.price || 0), 0);
+  // Calcolo totale
+  const calculateTotal = (prods) =>
+    prods.reduce((sum, p) => sum + (p.price * (p.quantity || 1)), 0);
 
+  // Quando cambiano i prodotti selezionati
   const handleProductChange = (selected) => {
-    const newProducts = selected || [];
+    const newProducts = (selected || []).map((p) => ({
+      ...p,
+      quantity: 1,
+    }));
     setFormData((prev) => ({
       ...prev,
       products: newProducts,
@@ -63,27 +52,33 @@ function AddCustomerOrderModal({ show, onHide, refetch }) {
     }));
   };
 
-  //////////////////////////////////
-  // Handle submit ordine cliente //
-  //////////////////////////////////
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  // Quando cambia la quantità
+  const handleQuantityChange = (index, value) => {
+    const newProducts = [...formData.products];
+    newProducts[index].quantity = Math.max(1, Number(value));
+    setFormData((prev) => ({
+      ...prev,
+      products: newProducts,
+      totalAmount: calculateTotal(newProducts),
+    }));
+  };
+
+  // Submit
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setError(null);
 
-    if (!formData.customer) {
-      setError("Please select a customer.");
-      return;
-    }
-
-    if (formData.products.length === 0) {
-      setError("Please select at least one product.");
-      return;
-    }
+    if (!formData.customer) return setError("Please select a customer.");
+    if (formData.products.length === 0)
+      return setError("Please select at least one product.");
 
     try {
       const payload = {
         customerId: formData.customer.value,
-        products: formData.products.map((p) => p.value),
+        products: formData.products.map((p) => ({
+          product: p.value,
+          quantity: p.quantity,
+        })),
         totalAmount: formData.totalAmount,
         status: formData.status,
         notes: formData.notes,
@@ -98,9 +93,6 @@ function AddCustomerOrderModal({ show, onHide, refetch }) {
     }
   };
 
-  //////////////////////////////////
-  // UI Rendering //
-  //////////////////////////////////
   return (
     <Modal show={show} onHide={onHide} centered size="lg">
       <Modal.Header closeButton>
@@ -109,25 +101,16 @@ function AddCustomerOrderModal({ show, onHide, refetch }) {
 
       <Modal.Body>
         {error && <Alert variant="danger">{error}</Alert>}
-        {errorCustomers && (
-          <Alert variant="warning">Failed to load customers.</Alert>
-        )}
-        {errorProducts && (
-          <Alert variant="warning">Failed to load products.</Alert>
-        )}
 
         <Form onSubmit={handleSubmit}>
-          {/* CUSTOMER SELECTION */}
+          {/* CUSTOMER */}
           <Form.Group className="mb-3">
             <Form.Label>Customer</Form.Label>
             {loadingCustomers ? (
-              <div className="text-center">
-                <Spinner animation="border" size="sm" />
-              </div>
+              <Spinner animation="border" size="sm" />
             ) : (
               <Select
                 isSearchable
-                isClearable
                 placeholder="Select customer..."
                 options={customerOptions}
                 value={formData.customer}
@@ -138,13 +121,11 @@ function AddCustomerOrderModal({ show, onHide, refetch }) {
             )}
           </Form.Group>
 
-          {/* PRODUCTS MULTI SELECT */}
+          {/* PRODUCTS */}
           <Form.Group className="mb-3">
             <Form.Label>Products</Form.Label>
             {loadingProducts ? (
-              <div className="text-center">
-                <Spinner animation="border" size="sm" />
-              </div>
+              <Spinner animation="border" size="sm" />
             ) : (
               <Select
                 isMulti
@@ -155,25 +136,57 @@ function AddCustomerOrderModal({ show, onHide, refetch }) {
                 onChange={handleProductChange}
               />
             )}
-            {formData.products.length > 0 && (
-              <div className="mt-2 text-muted small">
-                Total:{" "}
-                <strong>€{formData.totalAmount.toFixed(2)}</strong>
-              </div>
-            )}
           </Form.Group>
+
+          {/* TABLE WITH QUANTITY */}
+          {formData.products.length > 0 && (
+            <Table bordered hover responsive size="sm" className="mb-3">
+              <thead className="table-light">
+                <tr>
+                  <th>Product</th>
+                  <th>Price (€)</th>
+                  <th>Quantity</th>
+                  <th>Subtotal (€)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {formData.products.map((p, index) => (
+                  <tr key={p.value}>
+                    <td>{p.label}</td>
+                    <td>{p.price.toFixed(2)}</td>
+                    <td>
+                      <Form.Control
+                        type="number"
+                        min="1"
+                        value={p.quantity}
+                        onChange={(e) =>
+                          handleQuantityChange(index, e.target.value)
+                        }
+                        style={{ width: "80px", margin: "auto" }}
+                      />
+                    </td>
+                    <td>{(p.price * p.quantity).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="table-secondary fw-bold">
+                  <td colSpan="3" className="text-end">
+                    Total
+                  </td>
+                  <td>€{formData.totalAmount.toFixed(2)}</td>
+                </tr>
+              </tfoot>
+            </Table>
+          )}
 
           {/* STATUS */}
           <Form.Group className="mb-3">
             <Form.Label>Status</Form.Label>
             <Form.Select
-              name="status"
               value={formData.status}
               onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  status: e.target.value,
-                }))
+                setFormData((prev) => ({ ...prev, status: e.target.value }))
               }
             >
               <option value="PENDING">Pending</option>
@@ -191,15 +204,11 @@ function AddCustomerOrderModal({ show, onHide, refetch }) {
               rows={3}
               value={formData.notes}
               onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  notes: e.target.value,
-                }))
+                setFormData((prev) => ({ ...prev, notes: e.target.value }))
               }
             />
           </Form.Group>
 
-          {/* ACTION BUTTONS */}
           <div className="text-end">
             <Button variant="secondary" onClick={onHide} className="me-2">
               Cancel

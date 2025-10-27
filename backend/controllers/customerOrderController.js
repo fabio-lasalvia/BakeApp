@@ -18,7 +18,7 @@ export async function index(request, response, next) {
       })
       .populate("handledBy", "name surname email role")
       .populate("updatedBy", "name surname email role")
-      .populate("products");
+      .populate("products.product");
 
     return response.status(200).json(orders);
   } catch (error) {
@@ -41,7 +41,7 @@ export async function show(request, response, next) {
       })
       .populate("handledBy", "name surname email role")
       .populate("updatedBy", "name surname email role")
-      .populate("products");
+      .populate("products.product");
 
     if (!order) return next(createError(404, "Customer order not found"));
 
@@ -58,24 +58,40 @@ export async function create(request, response, next) {
   try {
     const { customerId, products, totalAmount, status, notes } = request.body;
 
+    // validazione cliente
     const customer = await Customer.findById(customerId);
     if (!customer) return next(createError(404, "Customer not found"));
 
+    // validazione prodotti
     if (!products || products.length === 0)
       return next(createError(400, "At least one product is required"));
 
-    const validProducts = await Product.find({ _id: { $in: products } });
+    const productIds = products.map((p) => p.product);
+    const validProducts = await Product.find({ _id: { $in: productIds } });
     if (validProducts.length !== products.length)
       return next(createError(400, "Some products not found"));
 
-    const handledBy = request.user?._id || null;
+    // utente autenticato
+    const handledBy = request.user?._id;
     if (!handledBy) return next(createError(401, "Unauthorized"));
 
+    // calcolo automatico totale se non fornito
+    let computedTotal = 0;
+    for (const item of products) {
+      const product = validProducts.find(
+        (p) => p._id.toString() === item.product
+      );
+      if (product) computedTotal += product.price * item.quantity;
+    }
+
+    const finalTotal = totalAmount ?? computedTotal;
+
+    // creazione ordine
     const order = await CustomerOrder.create({
       customer: customer._id,
       handledBy,
       products,
-      totalAmount,
+      totalAmount: finalTotal,
       status,
       notes,
     });
@@ -86,7 +102,7 @@ export async function create(request, response, next) {
         populate: { path: "user", select: "name surname email role" },
       },
       { path: "handledBy", select: "name surname email role" },
-      { path: "products" },
+      { path: "products.product" },
     ]);
 
     return response.status(201).json({
@@ -103,29 +119,52 @@ export async function create(request, response, next) {
 ///////////////////////////////////////
 export async function update(request, response, next) {
   try {
-    const updates = {
-      ...request.body,
-      updatedBy: request.user?._id || null,
-    };
+    const { products, totalAmount, status, notes } = request.body;
+    const updatedBy = request.user?._id || null;
 
-    const order = await CustomerOrder.findByIdAndUpdate(
-      request.params.id,
-      updates,
-      { new: true }
-    )
-      .populate({
+    const order = await CustomerOrder.findById(request.params.id);
+    if (!order) return next(createError(404, "Customer order not found"));
+
+    // aggiornamento prodotti e totale (se presenti)
+    if (products && Array.isArray(products)) {
+      const productIds = products.map((p) => p.product);
+      const validProducts = await Product.find({ _id: { $in: productIds } });
+
+      if (validProducts.length !== products.length)
+        return next(createError(400, "Some products not found"));
+
+      order.products = products;
+
+      // ricalcolo del totale
+      let newTotal = 0;
+      for (const item of products) {
+        const product = validProducts.find(
+          (p) => p._id.toString() === item.product
+        );
+        if (product) newTotal += product.price * item.quantity;
+      }
+      order.totalAmount = totalAmount ?? newTotal;
+    }
+
+    if (status) order.status = status;
+    if (notes) order.notes = notes;
+    order.updatedBy = updatedBy;
+
+    await order.save();
+
+    const populatedOrder = await order.populate([
+      {
         path: "customer",
         populate: { path: "user", select: "name surname email role" },
-      })
-      .populate("handledBy", "name surname email role")
-      .populate("updatedBy", "name surname email role")
-      .populate("products");
-
-    if (!order) return next(createError(404, "Customer order not found"));
+      },
+      { path: "handledBy", select: "name surname email role" },
+      { path: "updatedBy", select: "name surname email role" },
+      { path: "products.product" },
+    ]);
 
     return response.status(200).json({
       message: "Customer order updated successfully",
-      order,
+      order: populatedOrder,
     });
   } catch (error) {
     next(error);

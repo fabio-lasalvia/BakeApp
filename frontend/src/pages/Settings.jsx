@@ -12,6 +12,7 @@ import useMyProfile from "../hooks/users/useMyProfile";
 import useUpdateMyProfile from "../hooks/users/useUpdateMyProfile";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import { ArrowLeft } from "react-bootstrap-icons";
 
 const MySwal = withReactContent(Swal);
 
@@ -118,6 +119,14 @@ function Settings() {
 
   return (
     <Container className="py-5">
+      <Button
+              variant="outline-primary"
+              className="d-flex align-items-center gap-2 mb-3"
+              onClick={() => navigate("/home")}
+            >
+              <ArrowLeft size={20} />
+              Back
+            </Button>
       <Card className="shadow-lg border-0 rounded-4 p-4">
         <Card.Body>
           {/* PROFILE IMAGE SECTION */}

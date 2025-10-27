@@ -43,7 +43,7 @@ function SuppliersTable() {
   return (
     <div className="mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2 className="fw-bold text-primary mb-0">Suppliers</h2>
+        <h2 className="fw-bold text-primary mb-3">Suppliers Management</h2>
         <Button variant="success" onClick={addModal.openModal}>
           <i className="bi bi-plus-circle me-2"></i>Add Supplier
         </Button>

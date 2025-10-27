@@ -1,4 +1,4 @@
-import { Modal, Button, Form, Alert, Row, Col, Image } from "react-bootstrap";
+import { Modal, Button, Form, Alert, Row, Col } from "react-bootstrap";
 import { useState, useEffect } from "react";
 import useUpdateIngredient from "../../hooks/ingredients/useUpdateIngredient";
 
@@ -14,8 +14,6 @@ function EditIngredientModal({ show, onHide, ingredient, refetch }) {
     expirationDate: "",
     image: null,
   });
-  const [currentImage, setCurrentImage] = useState(null);
-  const [preview, setPreview] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -30,17 +28,13 @@ function EditIngredientModal({ show, onHide, ingredient, refetch }) {
           : "",
         image: null,
       });
-      setCurrentImage(ingredient.image || null);
-      setPreview(null);
     }
-  }, [ingredient, show]);
+  }, [ingredient]);
 
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
     if (type === "file") {
-      const file = files?.[0] || null;
-      setFormData((prev) => ({ ...prev, image: file }));
-      setPreview(file ? URL.createObjectURL(file) : null);
+      setFormData((prev) => ({ ...prev, image: files?.[0] || null }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -54,11 +48,7 @@ function EditIngredientModal({ show, onHide, ingredient, refetch }) {
     try {
       const data = new FormData();
       Object.entries(formData).forEach(([k, v]) => {
-        if (k === "image") {
-          if (v) data.append("image", v);
-        } else if (v !== null && v !== "") {
-          data.append(k, v);
-        }
+        if (v !== null && v !== "") data.append(k, v);
       });
 
       await update(ingredient._id, data);
@@ -144,25 +134,12 @@ function EditIngredientModal({ show, onHide, ingredient, refetch }) {
             <Col md={12}>
               <Form.Group>
                 <Form.Label>Image</Form.Label>
-                <Form.Control type="file" name="image" accept="image/*" onChange={handleChange} />
-                <div className="mt-2 d-flex align-items-center gap-3">
-                  {currentImage && !preview && (
-                    <Image
-                      src={currentImage}
-                      alt="current"
-                      rounded
-                      style={{ width: 100, height: 100, objectFit: "cover" }}
-                    />
-                  )}
-                  {/* {preview && (
-                    <Image
-                      src={preview}
-                      alt="preview"
-                      rounded
-                      style={{ width: 100, height: 100, objectFit: "cover" }}
-                    />
-                  )} */}
-                </div>
+                <Form.Control
+                  type="file"
+                  name="image"
+                  accept="image/*"
+                  onChange={handleChange}
+                />
               </Form.Group>
             </Col>
           </Row>
