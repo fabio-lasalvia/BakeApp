@@ -11,7 +11,7 @@ import { authorizeRoles } from "../middlewares/roleMiddleware.js";
 
 const router = express.Router();
 
-router.use(protect, authorizeRoles("ADMIN", "EMPLOYEE"));
+router.use(protect, authorizeRoles("ADMIN", "EMPLOYEE", "CUSTOMER"));
 
 router.get("/", index);
 router.get("/:id", show);

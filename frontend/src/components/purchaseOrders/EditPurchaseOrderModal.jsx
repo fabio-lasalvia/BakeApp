@@ -1,4 +1,4 @@
-import { Modal, Button, Form, Alert, Spinner } from "react-bootstrap";
+import { Modal, Button, Form, Alert, Spinner, Table } from "react-bootstrap";
 import Select from "react-select";
 import { useState, useEffect } from "react";
 import useUpdatePurchaseOrder from "../../hooks/purchaseOrders/useUpdatePurchaseOrder";
@@ -7,42 +7,75 @@ import useIndexIngredients from "../../hooks/ingredients/useIndexIngredients";
 function EditPurchaseOrderModal({ show, onHide, order, refetch }) {
   const { update, loading } = useUpdatePurchaseOrder();
   const { ingredients, loading: loadingIngredients } = useIndexIngredients();
+
   const [formData, setFormData] = useState({
     ingredients: [],
     totalCost: 0,
     status: "PENDING",
     expectedDelivery: "",
   });
+
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (order) {
-      const selectedIngredients =
-        order.ingredients?.map((i) => ({
-          value: i._id,
-          label: `${i.name} — €${i.price?.toFixed(2) || "0.00"}`,
-          price: i.price,
-        })) || [];
-      setFormData({
-        ingredients: selectedIngredients,
-        totalCost: order.totalCost || 0,
-        status: order.status || "PENDING",
-        expectedDelivery: order.expectedDelivery?.split("T")[0] || "",
-      });
-    }
-  }, [order]);
+  if (order) {
+    const mappedIngredients =
+      order.ingredients?.map((item) => {
+        // Se l’ingrediente non è popolato, previeni errori
+        const ing =
+          item.ingredient && typeof item.ingredient === "object"
+            ? item.ingredient
+            : { name: "Unknown ingredient", cost: 0, _id: item.ingredient };
+
+        return {
+          value: ing._id,
+          label: `${ing.name} — €${(ing.cost ?? 0).toFixed(2)}`,
+          cost: ing.cost ?? 0,
+          quantity: item.quantity || 1,
+        };
+      }) || [];
+
+    setFormData({
+      ingredients: mappedIngredients,
+      totalCost: mappedIngredients.reduce(
+        (sum, i) => sum + i.cost * (i.quantity || 1),
+        0
+      ),
+      status: order.status || "PENDING",
+      expectedDelivery: order.expectedDelivery?.split("T")[0] || "",
+    });
+  }
+}, [order]);
+
 
   const ingredientOptions = (ingredients || []).map((i) => ({
     value: i._id,
-    label: `${i.name} — €${i.price?.toFixed(2) || "0.00"}`,
-    price: i.price,
+    label: `${i.name} — €${i.cost?.toFixed(2) || "0.00"}`,
+    cost: i.cost || 0,
   }));
 
-  const calculateTotal = (selected) =>
-    selected.reduce((sum, i) => sum + (i.price || 0), 0);
+  const calculateTotal = (items) =>
+    items.reduce((sum, i) => sum + (i.cost || 0) * (i.quantity || 1), 0);
 
   const handleIngredientChange = (selected) => {
-    const newIngredients = selected || [];
+    const newIngredients = (selected || []).map((i) => {
+      const existing = formData.ingredients.find((f) => f.value === i.value);
+      return {
+        ...i,
+        quantity: existing ? existing.quantity : 1,
+      };
+    });
+
+    setFormData((prev) => ({
+      ...prev,
+      ingredients: newIngredients,
+      totalCost: calculateTotal(newIngredients),
+    }));
+  };
+
+  const handleQuantityChange = (index, value) => {
+    const newIngredients = [...formData.ingredients];
+    newIngredients[index].quantity = Math.max(1, Number(value) || 1);
     setFormData((prev) => ({
       ...prev,
       ingredients: newIngredients,
@@ -56,11 +89,14 @@ function EditPurchaseOrderModal({ show, onHide, order, refetch }) {
 
     try {
       const payload = {
-        ingredients: formData.ingredients.map((i) => i.value),
-        totalCost: formData.totalCost,
+        ingredients: formData.ingredients.map((i) => ({
+          ingredient: i.value,
+          quantity: i.quantity,
+        })),
         status: formData.status,
         expectedDelivery: formData.expectedDelivery,
       };
+
       await update(order._id, payload);
       refetch();
       onHide();
@@ -76,6 +112,7 @@ function EditPurchaseOrderModal({ show, onHide, order, refetch }) {
       </Modal.Header>
       <Modal.Body>
         {error && <Alert variant="danger">{error}</Alert>}
+
         <Form onSubmit={handleSubmit}>
           {/* INGREDIENTS */}
           <Form.Group className="mb-3">
@@ -88,12 +125,47 @@ function EditPurchaseOrderModal({ show, onHide, order, refetch }) {
               isDisabled={loadingIngredients}
               onChange={handleIngredientChange}
             />
-            {formData.ingredients.length > 0 && (
-              <div className="mt-2 text-muted small">
-                Total: <strong>€{formData.totalCost.toFixed(2)}</strong>
-              </div>
-            )}
           </Form.Group>
+
+          {/* TABLE OF INGREDIENTS */}
+          {formData.ingredients.length > 0 && (
+            <Table bordered hover responsive size="sm" className="mb-3">
+              <thead className="table-light">
+                <tr>
+                  <th>Ingredient</th>
+                  <th>Cost (€)</th>
+                  <th>Quantity</th>
+                  <th>Subtotal (€)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {formData.ingredients.map((ing, index) => (
+                  <tr key={ing.value}>
+                    <td>{ing.label}</td>
+                    <td>{ing.cost.toFixed(2)}</td>
+                    <td>
+                      <Form.Control
+                        type="number"
+                        min="1"
+                        value={ing.quantity}
+                        onChange={(e) => handleQuantityChange(index, e.target.value)}
+                        style={{ width: "80px", margin: "auto" }}
+                      />
+                    </td>
+                    <td>{(ing.cost * ing.quantity).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="table-secondary fw-bold">
+                  <td colSpan="3" className="text-end">
+                    Total
+                  </td>
+                  <td>€{formData.totalCost.toFixed(2)}</td>
+                </tr>
+              </tfoot>
+            </Table>
+          )}
 
           {/* STATUS */}
           <Form.Group className="mb-3">
@@ -119,10 +191,7 @@ function EditPurchaseOrderModal({ show, onHide, order, refetch }) {
               type="date"
               value={formData.expectedDelivery}
               onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  expectedDelivery: e.target.value,
-                }))
+                setFormData((prev) => ({ ...prev, expectedDelivery: e.target.value }))
               }
             />
           </Form.Group>

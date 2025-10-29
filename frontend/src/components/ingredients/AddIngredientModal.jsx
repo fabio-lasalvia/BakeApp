@@ -111,7 +111,7 @@ function AddIngredientModal({ show, onHide, refetch }) {
                   name="cost"
                   type="number"
                   step="0.01"
-                  min={1}
+                  min={0.5}
                   value={formData.cost}
                   onChange={handleChange}
                   required

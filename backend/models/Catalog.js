@@ -4,7 +4,6 @@ const CatalogSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     description: { type: String },
-    products: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
     isActive: { type: Boolean, default: true },
     lastUpdated: { type: Date, default: Date.now },
   },

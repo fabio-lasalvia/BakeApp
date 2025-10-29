@@ -24,8 +24,8 @@ function CatalogDetailsModal({ show, onHide, catalog }) {
               <td>{catalog.isActive ? "Active" : "Inactive"}</td>
             </tr>
             <tr>
-              <td><strong>Products</strong></td>
-              <td>{catalog.products?.length || 0}</td>
+              <td><strong>Products Count</strong></td>
+              <td>{catalog.productCount ?? 0}</td>
             </tr>
             <tr>
               <td><strong>Created At</strong></td>

@@ -75,7 +75,7 @@ function CatalogsTable() {
               <td>{cat.name}</td>
               <td>{cat.description || "—"}</td>
               <td>{cat.isActive ? "Active" : "Inactive"}</td>
-              <td>{cat.products?.length || 0}</td>
+              <td>{cat.productCount ?? 0}</td>
               <td>
                 <div className="d-flex justify-content-center gap-2">
                   <Button

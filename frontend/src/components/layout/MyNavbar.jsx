@@ -28,7 +28,7 @@ export default function MyNavbar({ show = false, onHide = () => {} }) {
 
     // Cataloghi e prodotti (admin + employee)
     { to: "/catalogs", label: "Catalogs", Icon: FolderFill, roles: ["ADMIN", "EMPLOYEE"] },
-    { to: "/products", label: "Products", Icon: BoxFill, roles: ["ADMIN", "EMPLOYEE"] },
+    { to: "/products", label: "Products", Icon: BoxFill, roles: ["ADMIN", "EMPLOYEE", "CUSTOMER"] },
 
     // Ingredienti (solo admin e employee)
     { to: "/ingredients", label: "Ingredients", Icon: BoxFill, roles: ["ADMIN", "EMPLOYEE"] },

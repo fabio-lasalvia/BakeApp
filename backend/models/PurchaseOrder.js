@@ -5,7 +5,12 @@ const PurchaseOrderSchema = new mongoose.Schema(
     supplier: { type: mongoose.Schema.Types.ObjectId, ref: "Supplier", required: true },
     handledBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    ingredients: [{ type: mongoose.Schema.Types.ObjectId, ref: "Ingredient" }],
+    ingredients: [
+  {
+    ingredient: { type: mongoose.Schema.Types.ObjectId, ref: "Ingredient", required: true },
+    quantity: { type: Number, required: true, min: 1 },
+  },
+],
     totalCost: { type: Number, required: true },
     status: {
       type: String,

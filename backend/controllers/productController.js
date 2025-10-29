@@ -12,7 +12,12 @@ import { createError } from "../helpers/createError.js";
 //////////////////////////////
 export async function index(request, response, next) {
   try {
-    const products = await Product.find().populate("catalog");
+    const query = {};
+    if (request.query.catalog) {
+      query.catalog = request.query.catalog;
+    }
+
+    const products = await Product.find(query).populate("catalog");
     return response.status(200).json(products);
   } catch (error) {
     next(error);
@@ -66,7 +71,6 @@ export async function create(request, response, next) {
     next(error);
   }
 }
-
 
 ////////////////////////////////
 ///// PUT - UPDATE PRODUCT /////

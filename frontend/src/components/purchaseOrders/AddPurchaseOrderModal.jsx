@@ -1,6 +1,6 @@
-import { Modal, Button, Form, Alert, Spinner } from "react-bootstrap";
+import { Modal, Button, Form, Alert, Spinner, Table } from "react-bootstrap";
 import Select from "react-select";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
 import useCreatePurchaseOrder from "../../hooks/purchaseOrders/useCreatePurchaseOrder";
 import useIndexSuppliers from "../../hooks/suppliers/useIndexSuppliers";
@@ -11,14 +11,25 @@ function AddPurchaseOrderModal({ show, onHide, refetch }) {
   const { suppliers, loading: loadingSuppliers } = useIndexSuppliers();
   const { ingredients, loading: loadingIngredients } = useIndexIngredients();
 
-  const [formData, setFormData] = useState({
+  // Stato iniziale del form
+  const initialFormState = {
     supplier: null,
-    ingredients: [],
+    ingredients: [], // [{ value, label, cost, quantity }]
     totalCost: 0,
     status: "PENDING",
     expectedDelivery: "",
-  });
+  };
+
+  const [formData, setFormData] = useState(initialFormState);
   const [error, setError] = useState(null);
+
+  // Reset form automatico quando il modale viene chiuso od aperto
+  useEffect(() => {
+    if (!show) {
+      setFormData(initialFormState);
+      setError(null);
+    }
+  }, [show]);
 
   const decoded = useMemo(() => {
     const token = localStorage.getItem("token");
@@ -37,15 +48,29 @@ function AddPurchaseOrderModal({ show, onHide, refetch }) {
 
   const ingredientOptions = (ingredients || []).map((i) => ({
     value: i._id,
-    label: `${i.name} — €${i.price?.toFixed(2) || "0.00"}`,
-    price: i.price || 0,
+    label: `${i.name} — €${i.cost?.toFixed(2) || "0.00"}`,
+    cost: i.cost || 0,
   }));
 
-  const calculateTotal = (selectedIngredients) =>
-    selectedIngredients.reduce((sum, i) => sum + (i.price || 0), 0);
+  const calculateTotal = (items) =>
+    items.reduce((sum, i) => sum + (i.cost || 0) * (i.quantity || 1), 0);
 
   const handleIngredientChange = (selected) => {
-    const newIngredients = selected || [];
+    const newIngredients = (selected || []).map((i) => ({
+      ...i,
+      quantity: 1, // quantità di default
+    }));
+
+    setFormData((prev) => ({
+      ...prev,
+      ingredients: newIngredients,
+      totalCost: calculateTotal(newIngredients),
+    }));
+  };
+
+  const handleQuantityChange = (index, value) => {
+    const newIngredients = [...formData.ingredients];
+    newIngredients[index].quantity = Math.max(1, Number(value) || 1);
     setFormData((prev) => ({
       ...prev,
       ingredients: newIngredients,
@@ -57,11 +82,17 @@ function AddPurchaseOrderModal({ show, onHide, refetch }) {
     event.preventDefault();
     setError(null);
 
+    if (!formData.supplier) return setError("Please select a supplier.");
+    if (formData.ingredients.length === 0)
+      return setError("Please select at least one ingredient.");
+
     try {
       const payload = {
-        supplierId: formData.supplier?.value,
-        ingredients: formData.ingredients.map((i) => i.value),
-        totalCost: formData.totalCost,
+        supplierId: formData.supplier.value,
+        ingredients: formData.ingredients.map((i) => ({
+          ingredient: i.value,
+          quantity: i.quantity,
+        })),
         status: formData.status,
         expectedDelivery: formData.expectedDelivery,
       };
@@ -69,6 +100,9 @@ function AddPurchaseOrderModal({ show, onHide, refetch }) {
       await create(payload);
       refetch();
       onHide();
+
+      // Reset form anche dopo creazione riuscita
+      setFormData(initialFormState);
     } catch (error) {
       console.error("Error creating purchase order:", error);
       setError(error.response?.data?.message || "Error creating purchase order");
@@ -112,12 +146,47 @@ function AddPurchaseOrderModal({ show, onHide, refetch }) {
               isDisabled={loadingIngredients}
               onChange={handleIngredientChange}
             />
-            {formData.ingredients.length > 0 && (
-              <div className="mt-2 text-muted small">
-                Total Cost: <strong>€{formData.totalCost.toFixed(2)}</strong>
-              </div>
-            )}
           </Form.Group>
+
+          {/* TABLE OF INGREDIENTS */}
+          {formData.ingredients.length > 0 && (
+            <Table bordered hover responsive size="sm" className="mb-3">
+              <thead className="table-light">
+                <tr>
+                  <th>Ingredient</th>
+                  <th>Cost (€)</th>
+                  <th>Quantity</th>
+                  <th>Subtotal (€)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {formData.ingredients.map((ing, index) => (
+                  <tr key={ing.value}>
+                    <td>{ing.label}</td>
+                    <td>{ing.cost.toFixed(2)}</td>
+                    <td>
+                      <Form.Control
+                        type="number"
+                        min="1"
+                        value={ing.quantity}
+                        onChange={(e) => handleQuantityChange(index, e.target.value)}
+                        style={{ width: "80px", margin: "auto" }}
+                      />
+                    </td>
+                    <td>{(ing.cost * ing.quantity).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="table-secondary fw-bold">
+                  <td colSpan="3" className="text-end">
+                    Total
+                  </td>
+                  <td>€{formData.totalCost.toFixed(2)}</td>
+                </tr>
+              </tfoot>
+            </Table>
+          )}
 
           {/* EXPECTED DELIVERY */}
           <Form.Group className="mb-3">
