@@ -4,45 +4,43 @@ import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
-import useMyProfile from "../../hooks/users/useMyProfile";
 
 const MySwal = withReactContent(Swal);
 
 export default function Topbar({ onToggleSidebar = () => {} }) {
-  const { user, logout } = useAuth();
-   const { profile, loading: loadingProfile, error, refetch } = useMyProfile();
+  const { user, logout, loading } = useAuth();
   const navigate = useNavigate();
 
-  // Gestione logout con conferma + toast
-const handleLogout = async () => {
-  const result = await MySwal.fire({
-    title: "Are you sure?",
-    text: "Do you want to disconnect from BakeApp?",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonText: "Yes, log out",
-    cancelButtonText: "Cancel",
-    reverseButtons: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#6c757d",
-  });
-
-  if (result.isConfirmed) {
-    logout();
-
-    MySwal.fire({
-      toast: true,
-      position: "top-end",
-      icon: "success",
-      title: "You have been logged out successfully",
-      showConfirmButton: false,
-      timer: 2000,
-      timerProgressBar: true,
+  const handleLogout = async () => {
+    const result = await MySwal.fire({
+      title: "Are you sure?",
+      text: "Do you want to disconnect from BakeApp?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, log out",
+      cancelButtonText: "Cancel",
+      reverseButtons: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#6c757d",
     });
 
-    navigate("/login");
-  }
-};
+    if (result.isConfirmed) {
+      logout();
+
+      MySwal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "You have been logged out successfully",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+      });
+
+      navigate("/login");
+    }
+  };
+
 
   return (
     <Navbar bg="white" className="border-bottom px-3 topbar shadow-sm" expand="lg">
@@ -77,15 +75,15 @@ const handleLogout = async () => {
           >
             <Image
               src={
-                  profile?.avatar ||
-                  "https://res.cloudinary.com/dbqckc5sl/image/upload/v1759400955/segnapostoNoImage_rumvcb.png"
+                user?.avatar ||
+                "https://res.cloudinary.com/dbqckc5sl/image/upload/v1759400955/segnapostoNoImage_rumvcb.png"
               }
-               roundedCircle
-               width={34}
-               height={34}
-               alt="User Avatar"
-               className="me-2"
-              />
+              roundedCircle
+              width={34}
+              height={34}
+              alt="User Avatar"
+              className="me-2"
+            />
             <span className="fw-semibold text-dark d-none d-md-inline">
               {user?.name || "User"}
             </span>

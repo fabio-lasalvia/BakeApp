@@ -1,26 +1,51 @@
 import { Modal, Button, Form, Alert, Spinner, Table } from "react-bootstrap";
 import Select from "react-select";
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { jwtDecode } from "jwt-decode";
 import useCreateCustomerOrder from "../../hooks/customerOrders/useCreateCustomerOrder";
 import useIndexCustomers from "../../hooks/customers/useIndexCustomers";
 import useIndexProducts from "../../hooks/products/useIndexProducts";
+import useMyProfile from "../../hooks/users/useMyProfile";
 
 function AddCustomerOrderModal({ show, onHide, refetch }) {
   const { create, loading } = useCreateCustomerOrder();
   const { customers, loading: loadingCustomers } = useIndexCustomers();
   const { products, loading: loadingProducts } = useIndexProducts();
+  const { profile, loading: loadingProfile } = useMyProfile();
 
-  const [formData, setFormData] = useState({
+  const initialForm = {
     customer: null,
-    products: [], // [{ value, label, price, quantity }]
+    products: [],
     totalAmount: 0,
     status: "PENDING",
     notes: "",
-  });
+  };
 
+  const [formData, setFormData] = useState(initialForm);
   const [error, setError] = useState(null);
 
-  // Dropdown opzioni clienti
+
+  const decoded = useMemo(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return null;
+    try {
+      return jwtDecode(token);
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const userRole = decoded?.role || "CUSTOMER";
+
+
+  useEffect(() => {
+    if (!show) {
+      setFormData(initialForm);
+      setError(null);
+    }
+  }, [show]);
+
+
   const customerOptions = (customers || [])
     .filter((c) => c?.user)
     .map((c) => ({
@@ -28,18 +53,30 @@ function AddCustomerOrderModal({ show, onHide, refetch }) {
       label: `${c.user.name || "Unnamed"} ${c.user.surname || ""} (${c.user.email || ""})`,
     }));
 
-  // Dropdown opzioni prodotti
   const productOptions = (products || []).map((p) => ({
     value: p._id,
     label: `${p.name || "Unnamed"} — €${(p.price || 0).toFixed(2)}`,
     price: p.price || 0,
   }));
 
-  // Calcolo totale
+
+  useEffect(() => {
+    if (userRole === "CUSTOMER" && profile && profile.customer) {
+      const selfCustomer = profile.customer;
+      setFormData((prev) => ({
+        ...prev,
+        customer: {
+          value: selfCustomer._id,
+          label: `${profile.name} ${profile.surname} (${profile.email})`,
+        },
+      }));
+    }
+  }, [userRole, profile]);
+
+
   const calculateTotal = (prods) =>
     prods.reduce((sum, p) => sum + (p.price * (p.quantity || 1)), 0);
 
-  // Quando cambiano i prodotti selezionati
   const handleProductChange = (selected) => {
     const newProducts = (selected || []).map((p) => ({
       ...p,
@@ -52,7 +89,6 @@ function AddCustomerOrderModal({ show, onHide, refetch }) {
     }));
   };
 
-  // Quando cambia la quantità
   const handleQuantityChange = (index, value) => {
     const newProducts = [...formData.products];
     newProducts[index].quantity = Math.max(1, Number(value));
@@ -63,7 +99,7 @@ function AddCustomerOrderModal({ show, onHide, refetch }) {
     }));
   };
 
-  // Submit
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -87,12 +123,14 @@ function AddCustomerOrderModal({ show, onHide, refetch }) {
       await create(payload);
       refetch();
       onHide();
+      setFormData(initialForm);
     } catch (error) {
       console.error("Error creating order:", error);
       setError(error.response?.data?.message || "Error creating order");
     }
   };
 
+  
   return (
     <Modal show={show} onHide={onHide} centered size="lg">
       <Modal.Header closeButton>
@@ -106,8 +144,14 @@ function AddCustomerOrderModal({ show, onHide, refetch }) {
           {/* CUSTOMER */}
           <Form.Group className="mb-3">
             <Form.Label>Customer</Form.Label>
-            {loadingCustomers ? (
+            {loadingCustomers || loadingProfile ? (
               <Spinner animation="border" size="sm" />
+            ) : userRole === "CUSTOMER" ? (
+              <Form.Control
+                type="text"
+                value={formData.customer?.label || "Loading..."}
+                readOnly
+              />
             ) : (
               <Select
                 isSearchable
@@ -138,7 +182,7 @@ function AddCustomerOrderModal({ show, onHide, refetch }) {
             )}
           </Form.Group>
 
-          {/* TABLE WITH QUANTITY */}
+          {/* PRODUCTS TABLE */}
           {formData.products.length > 0 && (
             <Table bordered hover responsive size="sm" className="mb-3">
               <thead className="table-light">
@@ -181,20 +225,27 @@ function AddCustomerOrderModal({ show, onHide, refetch }) {
           )}
 
           {/* STATUS */}
-          <Form.Group className="mb-3">
-            <Form.Label>Status</Form.Label>
-            <Form.Select
-              value={formData.status}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, status: e.target.value }))
-              }
-            >
-              <option value="PENDING">Pending</option>
-              <option value="IN_PROGRESS">In Progress</option>
-              <option value="COMPLETED">Completed</option>
-              <option value="CANCELLED">Cancelled</option>
-            </Form.Select>
-          </Form.Group>
+          {userRole !== "CUSTOMER" ? (
+            <Form.Group className="mb-3">
+              <Form.Label>Status</Form.Label>
+              <Form.Select
+                value={formData.status}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, status: e.target.value }))
+                }
+              >
+                <option value="PENDING">Pending</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="CANCELLED">Cancelled</option>
+              </Form.Select>
+            </Form.Group>
+          ) : (
+            <Form.Group className="mb-3">
+              <Form.Label>Status</Form.Label>
+              <Form.Control type="text" value="PENDING" readOnly />
+            </Form.Group>
+          )}
 
           {/* NOTES */}
           <Form.Group className="mb-3">
@@ -209,6 +260,7 @@ function AddCustomerOrderModal({ show, onHide, refetch }) {
             />
           </Form.Group>
 
+          {/* BUTTONS */}
           <div className="text-end">
             <Button variant="secondary" onClick={onHide} className="me-2">
               Cancel

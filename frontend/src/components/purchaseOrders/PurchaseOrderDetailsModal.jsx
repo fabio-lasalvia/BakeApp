@@ -67,18 +67,25 @@ function PurchaseOrderDetailsModal({ show, onHide, order }) {
                     <th>#</th>
                     <th>Ingredient</th>
                     <th>Unit</th>
-                    <th>Price (€)</th>
+                    <th>Quantity</th>
+                    <th>Cost (€/unit)</th>
+                    <th>Subtotal (€)</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {order.ingredients.map((i, idx) => (
-                    <tr key={i._id}>
-                      <td>{idx + 1}</td>
-                      <td>{i.name}</td>
-                      <td>{i.unit || "—"}</td>
-                      <td>{i.price?.toFixed(2) || "—"}</td>
-                    </tr>
-                  ))}
+                  {order.ingredients.map((item, idx) => {
+                    const ing = item.ingredient || {};
+                    return (
+                      <tr key={idx}>
+                        <td>{idx + 1}</td>
+                        <td>{ing.name || "—"}</td>
+                        <td>{ing.unit || "—"}</td>
+                        <td>{item.quantity}</td>
+                        <td>{ing.cost?.toFixed(2) || "—"}</td>
+                        <td>{(ing.cost * item.quantity).toFixed(2)}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </Table>
             ) : (

@@ -75,24 +75,27 @@ export async function create(request, response, next) {
     const handledBy = request.user?._id;
     if (!handledBy) return next(createError(401, "Unauthorized"));
 
-    // calcolo automatico totale se non fornito
+    let finalStatus = status;
+    if (request.user.role === "CUSTOMER") {
+      finalStatus = "PENDING";
+    }
+
     let computedTotal = 0;
     for (const item of products) {
       const product = validProducts.find(
         (p) => p._id.toString() === item.product
       );
-      if (product) computedTotal += product.price * item.quantity;
+      if (product) computedTotal += product.price * (item.quantity || 1);
     }
 
     const finalTotal = totalAmount ?? computedTotal;
 
-    // creazione ordine
     const order = await CustomerOrder.create({
       customer: customer._id,
       handledBy,
       products,
       totalAmount: finalTotal,
-      status,
+      status: finalStatus,
       notes,
     });
 
