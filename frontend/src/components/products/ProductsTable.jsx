@@ -1,5 +1,6 @@
 import { Accordion, Table, Button, Spinner, Badge, Form } from "react-bootstrap";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { jwtDecode } from "jwt-decode"; // 👈 aggiunto import
 import useIndexProducts from "../../hooks/products/useIndexProducts";
 import useDeleteProduct from "../../hooks/products/useDeleteProduct";
 import AddProductModal from "./AddProductModal";
@@ -19,6 +20,19 @@ function ProductsTable() {
   const detailsModal = useHandleModal();
   const confirmModal = useHandleModal();
 
+  ///// USER ROLE CHECK /////
+  const decoded = useMemo(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return null;
+    try {
+      return jwtDecode(token);
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const userRole = decoded?.role || "CUSTOMER"; // default: customer
+
   const categoryLabels = {
     LEAVENED: "Leavened",
     CAKE: "Cake",
@@ -29,9 +43,8 @@ function ProductsTable() {
     OTHER: "Other",
   };
 
-  /////////////////////////
+
   ///// LOADING STATE /////
-  /////////////////////////
   if (loading)
     return (
       <div className="text-center p-4">
@@ -46,9 +59,8 @@ function ProductsTable() {
       </div>
     );
 
-  //////////////////////////////
+
   ///// GROUP BY CATEGORY  /////
-  //////////////////////////////
   const groupedProducts = products.reduce((acc, product) => {
     const category = product.category || "OTHER";
     if (!acc[category]) acc[category] = [];
@@ -56,9 +68,7 @@ function ProductsTable() {
     return acc;
   }, {});
 
-  ////////////////////////////
   ///// DELETE PRODUCT ///////
-  ////////////////////////////
   const handleDelete = async () => {
     if (!selectedProduct) return;
     await remove(selectedProduct._id);
@@ -66,17 +76,19 @@ function ProductsTable() {
     confirmModal.closeModal();
   };
 
-  ////////////////////////////
-  ///// RETURN LAYOUT ////////
-  ////////////////////////////
+
   return (
     <div className="mt-4">
       {/* HEADER */}
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h2 className="fw-bold text-primary mb-0">Products Management</h2>
-        <Button variant="success" onClick={addModal.openModal}>
-          <i className="bi bi-plus-circle me-2"></i>Add Product
-        </Button>
+
+        {/* AddProduct solo se non è customer */}
+        {userRole !== "CUSTOMER" && (
+          <Button variant="success" onClick={addModal.openModal}>
+            <i className="bi bi-plus-circle me-2"></i>Add Product
+          </Button>
+        )}
       </div>
 
       {/* ACCORDION MULTI-OPEN */}
@@ -106,7 +118,8 @@ function ProductsTable() {
                       <th>Price (€)</th>
                       <th>Catalog</th>
                       <th>Available</th>
-                      <th>Actions</th>
+                      {/* Colonna Actions visibile solo se non customer */}
+                      {userRole !== "CUSTOMER" && <th>Actions</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -141,8 +154,48 @@ function ProductsTable() {
                             style={{ pointerEvents: "none" }}
                           />
                         </td>
-                        <td>
-                          <div className="d-flex justify-content-center gap-2">
+
+                        {/* Bottoni visibili solo se non è customer */}
+                        {userRole !== "CUSTOMER" && (
+                          <td>
+                            <div className="d-flex justify-content-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline-primary"
+                                onClick={() => {
+                                  setSelectedProduct(product);
+                                  detailsModal.openModal();
+                                }}
+                              >
+                                <i className="bi bi-eye"></i>
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline-warning"
+                                onClick={() => {
+                                  setSelectedProduct(product);
+                                  editModal.openModal();
+                                }}
+                              >
+                                <i className="bi bi-pencil"></i>
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline-danger"
+                                onClick={() => {
+                                  setSelectedProduct(product);
+                                  confirmModal.openModal();
+                                }}
+                              >
+                                <i className="bi bi-trash"></i>
+                              </Button>
+                            </div>
+                          </td>
+                        )}
+
+                        {/* Se è customer, solo pulsante "View" */}
+                        {userRole === "CUSTOMER" && (
+                          <td>
                             <Button
                               size="sm"
                               variant="outline-primary"
@@ -153,28 +206,8 @@ function ProductsTable() {
                             >
                               <i className="bi bi-eye"></i>
                             </Button>
-                            <Button
-                              size="sm"
-                              variant="outline-warning"
-                              onClick={() => {
-                                setSelectedProduct(product);
-                                editModal.openModal();
-                              }}
-                            >
-                              <i className="bi bi-pencil"></i>
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline-danger"
-                              onClick={() => {
-                                setSelectedProduct(product);
-                                confirmModal.openModal();
-                              }}
-                            >
-                              <i className="bi bi-trash"></i>
-                            </Button>
-                          </div>
-                        </td>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
