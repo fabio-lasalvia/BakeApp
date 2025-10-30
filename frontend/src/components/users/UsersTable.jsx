@@ -158,21 +158,23 @@ function UsersTable() {
 
       {/* ACCORDION MULTI-OPEN */}
       <Accordion alwaysOpen>
-        {Object.entries(groupedUsers).map(([role, list], index) => (
-          <Accordion.Item eventKey={index.toString()} key={role}>
-            <Accordion.Header>
-              <div className="d-flex align-items-center justify-content-between w-100">
-                <span>
-                  {role.charAt(0) + role.slice(1).toLowerCase()}
-                  <Badge bg="secondary" pill className="ms-2">
-                    {list.length}
-                  </Badge>
-                </span>
-              </div>
-            </Accordion.Header>
-            <Accordion.Body>{renderTable(role)}</Accordion.Body>
-          </Accordion.Item>
-        ))}
+        {Object.entries(groupedUsers)
+          .sort(([roleA], [roleB]) => roleA.localeCompare(roleB))
+          .map(([role, list], index) => (
+            <Accordion.Item eventKey={index.toString()} key={role}>
+              <Accordion.Header>
+                <div className="d-flex align-items-center justify-content-between w-100">
+                  <span>
+                    {role.charAt(0) + role.slice(1).toLowerCase()}
+                    <Badge bg="secondary" pill className="ms-2">
+                      {list.length}
+                    </Badge>
+                  </span>
+                </div>
+              </Accordion.Header>
+              <Accordion.Body>{renderTable(role)}</Accordion.Body>
+            </Accordion.Item>
+          ))}
       </Accordion>
 
       {/* MODALS */}

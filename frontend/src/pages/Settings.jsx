@@ -57,7 +57,7 @@ function Settings() {
       });
       setPreview(
         profile.avatar ||
-          "https://res.cloudinary.com/dbqckc5sl/image/upload/v1759400955/segnapostoNoImage_rumvcb.png"
+        "https://res.cloudinary.com/dbqckc5sl/image/upload/v1759400955/segnapostoNoImage_rumvcb.png"
       );
     }
   }, [profile]);
@@ -90,7 +90,7 @@ function Settings() {
 
     try {
       await update(data);
-      await refreshProfile(); 
+      await refreshProfile();
       await refetch();
 
       MySwal.fire({
@@ -141,17 +141,12 @@ function Settings() {
 
       <Card className="shadow-lg border-0 rounded-4 p-4">
         <Card.Body>
+
           {/* PROFILE IMAGE SECTION */}
           <div className="d-flex flex-column align-items-center mb-4">
             <div
-              className="position-relative rounded-circle overflow-hidden shadow"
+              className="position-relative profile-image-wrapper shadow-lg"
               onClick={handleAvatarClick}
-              style={{
-                width: "140px",
-                height: "140px",
-                cursor: "pointer",
-                border: "3px solid #dee2e6",
-              }}
             >
               <Image
                 src={
@@ -159,16 +154,9 @@ function Settings() {
                   "https://res.cloudinary.com/dbqckc5sl/image/upload/v1759400955/segnapostoNoImage_rumvcb.png"
                 }
                 alt="Profile"
-                className="w-100 h-100"
-                style={{
-                  objectFit: "cover",
-                  borderRadius: "50%",
-                }}
+                className="profile-image"
               />
-              <div
-                className="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle p-2 shadow"
-                style={{ transform: "translate(25%, 25%)" }}
-              >
+              <div className="edit-overlay">
                 <i className="bi bi-camera-fill"></i>
               </div>
             </div>
