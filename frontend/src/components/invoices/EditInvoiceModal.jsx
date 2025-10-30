@@ -57,6 +57,7 @@ function EditInvoiceModal({ show, onHide, invoice, refetch }) {
               name="total"
               value={formData.total}
               onChange={handleChange}
+              disabled
             />
           </Form.Group>
 

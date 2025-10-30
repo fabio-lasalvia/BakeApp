@@ -17,11 +17,19 @@ export async function index(request, response, next) {
       .populate({
         path: "customerOrder",
         populate: {
-          path: "products",
-          select: "name price description",
+          path: "products.product",
+          model: "Product",
+          select: "name price description image category",
         },
       })
-      .populate("purchaseOrder")
+      .populate({
+        path: "purchaseOrder",
+        populate: {
+          path: "ingredients",
+          model: "Ingredient",
+          select: "name cost quantity unit",
+        },
+      })
       .populate("handledBy", "name surname email role");
 
     return response.status(200).json(invoices);
@@ -40,12 +48,23 @@ export async function show(request, response, next) {
         path: "customer",
         populate: { path: "user", select: "name surname email" },
       })
+      .populate("handledBy", "name surname email role")
       .populate({
         path: "customerOrder",
-        populate: { path: "products", select: "name price description" },
+        populate: {
+          path: "products.product",
+          model: "Product",
+          select: "name price description image category",
+        },
       })
-      .populate("purchaseOrder")
-      .populate("handledBy", "name surname email role");
+      .populate({
+        path: "purchaseOrder",
+        populate: {
+          path: "ingredients",
+          model: "Ingredient",
+          select: "name cost quantity unit",
+        },
+      });
 
     if (!invoice) return next(createError(404, "Invoice not found"));
 
@@ -72,18 +91,22 @@ export async function create(request, response, next) {
     let customer = null;
     let total = 0;
 
-    // se è una customer order
+    // Se la fattura è legata a un ordine cliente
     if (customerOrderId) {
       const order = await CustomerOrder.findById(customerOrderId)
         .populate("customer")
-        .populate("products");
+        .populate({
+          path: "products.product",
+          model: "Product",
+        });
 
       if (!order) return next(createError(404, "Customer order not found"));
+
       customer = order.customer._id;
       total = order.totalAmount;
     }
 
-    // se è una purchase order
+    // Se la fattura è legata a un ordine di acquisto
     if (purchaseOrderId) {
       const order = await PurchaseOrder.findById(purchaseOrderId);
       if (!order) return next(createError(404, "Purchase order not found"));
@@ -127,8 +150,22 @@ export async function update(request, response, next) {
         path: "customer",
         populate: { path: "user", select: "name surname email" },
       })
-      .populate("customerOrder")
-      .populate("purchaseOrder")
+      .populate({
+        path: "customerOrder",
+        populate: {
+          path: "products.product",
+          model: "Product",
+          select: "name price description image category",
+        },
+      })
+      .populate({
+        path: "purchaseOrder",
+        populate: {
+          path: "ingredients",
+          model: "Ingredient",
+          select: "name cost quantity unit",
+        },
+      })
       .populate("handledBy", "name surname email role");
 
     if (!invoice) return next(createError(404, "Invoice not found"));
